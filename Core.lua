@@ -21,42 +21,18 @@ local function PrintToChat(result, showAll)
     ns.Say(ns.SummaryText(result))
 end
 
--- On login or /reload: set up the panel icon, wait 5 seconds, then scan
-local brokerReady = false
-local events = CreateFrame("Frame")
-events:RegisterEvent("PLAYER_ENTERING_WORLD")
-events:SetScript("OnEvent", function(_, _, isInitialLogin, isReloadingUi)
-    if isInitialLogin or isReloadingUi then
-        if not brokerReady then
-            ns.Broker:Init()
-            brokerReady = true
-        end
-        C_Timer.After(5, function()
-            local settings = ns.GetSettings()
-            if settings.openOnLogin then
-                ns.Window:Open()
-            else
-                ns.Scan(function() end) -- still scan, so the panel icon has a count
-            end
-            if settings.chatOnLogin then
-                ns.Scan(function(result) PrintToChat(result, false) end)
-            end
-        end)
-    end
-end)
-
 ------------------------------------------------------------
 -- AUTO-REFRESH: when you hand in a quest, or map markers change
 -- (e.g. a Special Assignment unlocks), refresh the open window.
 ------------------------------------------------------------
 local refreshPending = false
 
--- Waits 2 seconds so the game's map data can catch up. Extra events in
--- those 2 seconds are ignored, so a burst of updates = one refresh.
-local function RefreshSoon()
+-- Waits a moment so the game's data can catch up. Extra events in that
+-- time are ignored, so a burst of updates = one refresh.
+local function RefreshSoon(delay)
     if refreshPending then return end
     refreshPending = true
-    C_Timer.After(2, function()
+    C_Timer.After(delay or 2, function()
         refreshPending = false
         if ns.Window:IsShown() then
             ns.Window:Refresh(true)
@@ -71,7 +47,35 @@ watcher:RegisterEvent("QUEST_TURNED_IN")   -- you handed in a quest
 watcher:RegisterEvent("AREA_POIS_UPDATED") -- map markers changed (SA unlocked, etc.)
 -- Some world quests complete without a hand-in; register this one safely
 pcall(watcher.RegisterEvent, watcher, "WORLD_QUEST_COMPLETED_BY_SPELL")
-watcher:SetScript("OnEvent", RefreshSoon)
+watcher:SetScript("OnEvent", function() RefreshSoon() end)
+
+------------------------------------------------------------
+-- LOGIN, /reload and loading screens
+------------------------------------------------------------
+local brokerReady = false
+local events = CreateFrame("Frame")
+events:RegisterEvent("PLAYER_ENTERING_WORLD")
+events:SetScript("OnEvent", function(_, _, isInitialLogin, isReloadingUi)
+    if not (isInitialLogin or isReloadingUi) then
+        RefreshSoon(3) -- came through a loading screen: refresh once things settle
+        return
+    end
+    if not brokerReady then
+        ns.Broker:Init()
+        brokerReady = true
+    end
+    C_Timer.After(5, function()
+        local settings = ns.GetSettings()
+        if settings.openOnLogin then
+            ns.Window:Open()
+        else
+            ns.Scan(function() end) -- still scan, so the panel icon has a count
+        end
+        if settings.chatOnLogin then
+            ns.Scan(function(result) PrintToChat(result, false) end)
+        end
+    end)
+end)
 
 SLASH_KRAZZIEWTD1 = "/kwtd"
 SlashCmdList.KRAZZIEWTD = function(msg)

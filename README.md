@@ -43,6 +43,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - Special Assignments are **not** world quests while locked. They're map markers (area POIs) whose icon name contains `Capstone`, ending in `Locked`.
 - A locked Special Assignment's tooltip counts down ("Complete 1 world quest in Eversong to unlock").
 - Once unlocked, the marker disappears and it becomes a world quest with tag ID `286` ("Capstone World Quest").
+- Some quest-reward "currencies" are really reputation; `C_CurrencyInfo.GetFactionGrantedByCurrency` tells them apart.
 - Silvermoon City world quests count towards Eversong Woods' unlock.
 - Zone map IDs: Eversong Woods 2395, Zul'Aman 2437, Harandar 2413, Voidstorm 2405, Silvermoon City 2393, The Coiled Isle 2512, Vaults of Atal'Utek 2509.
 
@@ -63,6 +64,8 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Version history
 
+- **0.14.1** Scans retry while reward data is still loading; refresh after loading screens
+- **0.14.0** Reputation rewards split from currencies into their own category (off by default)
 - **0.13.0** Categories can be switched off; any-gear category; currencies learned from rewards as categories
 - **0.12.0** Titan Panel and minimap icon with a to-do count
 - **0.11.0** Auto-refresh on quest hand-in and when map markers change; completed quests filtered out

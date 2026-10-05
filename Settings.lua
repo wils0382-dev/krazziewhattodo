@@ -20,12 +20,13 @@ ns.DEFAULTS = {
         "sa",     -- the Special Assignment itself
         "unlock", -- world quests that count towards unlocking a Special Assignment
         "anygear",-- any gear reward at all (e.g. to disenchant)
+        "rep",    -- reputation rewards (all factions together)
         -- Currencies are added to the end automatically as Krazzie sees them
     },
 
     -- Categories switched OFF (tick boxes in the Settings panel).
     -- New currencies start off too, until you tick them.
-    off = { anygear = true },
+    off = { anygear = true, rep = true },
 
     openOnLogin = true,  -- open the window automatically when you log in
     chatOnLogin = false, -- also print the list to chat on login

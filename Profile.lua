@@ -73,14 +73,30 @@ end
 ------------------------------------------------------------
 -- Currencies Krazzie has seen in quest rewards (shared by all characters)
 ------------------------------------------------------------
+-- Some "currencies" are really reputation with a faction. The game can tell us.
+function ns.IsRepCurrency(currencyID)
+    if C_CurrencyInfo and C_CurrencyInfo.GetFactionGrantedByCurrency then
+        local ok, factionID = pcall(C_CurrencyInfo.GetFactionGrantedByCurrency, currencyID)
+        if ok and factionID and factionID > 0 then return true end
+    end
+    return false
+end
+
 function ns.GetKnownCurrencies()
     local db = ns.GetDB()
     db.account.currencies = db.account.currencies or {}
+    -- Tidy up: drop anything learned earlier that turns out to be reputation
+    for id in pairs(db.account.currencies) do
+        if ns.IsRepCurrency(id) then db.account.currencies[id] = nil end
+    end
     return db.account.currencies
 end
 
 function ns.LearnCurrency(currencyID, name)
-    if currencyID and name then ns.GetKnownCurrencies()[currencyID] = name end
+    if currencyID and name and not ns.IsRepCurrency(currencyID) then
+        ns.GetDB().account.currencies = ns.GetDB().account.currencies or {}
+        ns.GetDB().account.currencies[currencyID] = name
+    end
 end
 
 -- Is a category switched off? Currencies ("cur:1234") are off unless ticked.

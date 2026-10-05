@@ -16,6 +16,7 @@ local LABELS = {
     sa      = "Special Assignments",
     unlock  = "Unlocks a Special Assignment",
     anygear = "Any gear (e.g. to disenchant)",
+    rep     = "Reputation (all factions)",
 }
 
 local panel, prioFrame, lower

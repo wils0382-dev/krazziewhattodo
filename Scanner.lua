@@ -200,12 +200,19 @@ local function Evaluate(questID, zoneHasLockedSA, settings)
             text = ("|cffccccccGear|r %s (ilvl %s)"):format(gear.name or "item", gear.itemLevel or "?") })
     end
 
-    -- Currencies: each one is its own category, learned as we see it
+    -- Currencies: each real currency is its own category, learned as we see it.
+    -- Reputation "currencies" all share one category instead.
     local currencies = GetCurrencies(questID)
     for _, c in ipairs(currencies) do
-        ns.LearnCurrency(c.id, c.name)
-        table.insert(reasons, { category = "cur:" .. c.id,
-            text = ("|cff40c0ff%d %s|r"):format(c.amount, c.name or "currency") })
+        if ns.IsRepCurrency(c.id) then
+            c.isRep = true
+            table.insert(reasons, { category = "rep",
+                text = ("|cff00ff96+%d %s rep|r"):format(c.amount, c.name or "faction") })
+        else
+            ns.LearnCurrency(c.id, c.name)
+            table.insert(reasons, { category = "cur:" .. c.id,
+                text = ("|cff40c0ff%d %s|r"):format(c.amount, c.name or "currency") })
+        end
     end
 
     -- Gold
@@ -223,7 +230,9 @@ local function Evaluate(questID, zoneHasLockedSA, settings)
     local summary = {}
     if copper > 0 then table.insert(summary, GetCoinTextureString(copper)) end
     if gear then table.insert(summary, ("%s (ilvl %s)"):format(gear.name or "item", gear.itemLevel or "?")) end
-    for _, c in ipairs(currencies) do table.insert(summary, ("%d %s"):format(c.amount, c.name or "currency")) end
+    for _, c in ipairs(currencies) do
+        table.insert(summary, (c.isRep and "+%d %s rep" or "%d %s"):format(c.amount, c.name or "currency"))
+    end
     if #summary == 0 then table.insert(summary, "other reward") end
 
     return reasons, table.concat(summary, ", "), copper, isSA
@@ -336,18 +345,25 @@ end
 ------------------------------------------------------------
 -- 7. PUBLIC: scan, then hand the result to whoever asked
 ------------------------------------------------------------
+-- If reward data is still loading (common just after a loading screen),
+-- wait and check again: up to 4 checks, 2 seconds apart.
+local MAX_CHECKS, CHECK_DELAY = 4, 2
+
 function ns.Scan(onDone)
-    local list = CollectWorldQuests()
-    local function finish()
+    local checks = 0
+    local function attempt()
+        checks = checks + 1
+        local list = CollectWorldQuests() -- re-collect each time, the map may still be loading
+        local stillLoading = (#list == 0) or (RequestRewards(list) > 0)
+        if stillLoading and checks < MAX_CHECKS then
+            C_Timer.After(CHECK_DELAY, attempt)
+            return
+        end
         local result = BuildEntries(list)
         if ns.Broker then ns.Broker:Update(result) end -- keep the panel icon's count fresh
         onDone(result)
     end
-    if RequestRewards(list) > 0 then
-        C_Timer.After(3, finish) -- give reward data time to load
-    else
-        finish()
-    end
+    attempt()
 end
 
 -- One quest as a line of text (used by both chat and the window)
