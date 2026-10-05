@@ -23,6 +23,9 @@ ns.DEFAULTS = {
 
     openOnLogin = true,  -- open the window automatically when you log in
     chatOnLogin = false, -- also print the list to chat on login
+
+    closeOnEscape    = false, -- Esc (and opening the map) closes the window
+    focusCurrentZone = false, -- expand only the zone you're in, collapse the rest
 }
 
 ------------------------------------------------------------

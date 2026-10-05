@@ -14,7 +14,7 @@ local LABELS = {
     unlock = "Unlocks a Special Assignment",
 }
 
-local panel, ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox
+local panel, ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox
 local rows = {}
 
 ------------------------------------------------------------
@@ -22,6 +22,7 @@ local rows = {}
 ------------------------------------------------------------
 local function Changed()
     Panel:Update()
+    ns.Window:ApplySettings()
     ns.Window:Refresh(true)
 end
 
@@ -92,7 +93,7 @@ end
 ------------------------------------------------------------
 local function Create(parent)
     panel = CreateFrame("Frame", "KrazzieSettingsPanel", parent, "BackdropTemplate")
-    panel:SetSize(WIDTH, parent:GetHeight())
+    panel:SetSize(WIDTH, 500)
     panel:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -143,6 +144,17 @@ local function Create(parent)
         Changed()
     end)
 
+    -- Window behaviour
+    Label("Window", PAD, y - 78, "GameFontNormal")
+    escBox = TickBox("Close with Esc (and when the map opens)", y - 98, function(on)
+        ns.SetSetting("closeOnEscape", on and true or false)
+        Changed()
+    end)
+    focusBox = TickBox("Focus on my current zone", y - 122, function(on)
+        ns.SetSetting("focusCurrentZone", on and true or false)
+        Changed()
+    end)
+
     -- Reset
     local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     reset:SetSize(130, 22)
@@ -180,6 +192,8 @@ function Panel:Update()
 
     loginBox:SetChecked(s.openOnLogin)
     chatBox:SetChecked(s.chatOnLogin)
+    escBox:SetChecked(s.closeOnEscape)
+    focusBox:SetChecked(s.focusCurrentZone)
 end
 
 ------------------------------------------------------------

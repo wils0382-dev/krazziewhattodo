@@ -47,7 +47,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Roadmap
 
-- [ ] Window comfort: stays open with the map, resizing, collapsible zones (auto-expand current zone)
+- [x] Window comfort: stays open with the map, resizing, collapsible zones (focus on current zone)
 - [ ] Titan Panel / minimap icon (LibDataBroker)
 - [ ] Quests tick themselves off when handed in
 - [ ] Currency rewards as priority categories with thresholds
@@ -61,6 +61,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Version history
 
+- **0.10.0** Window stays open with the map; resizable; collapsible zones; focus on current zone
 - **0.9.0** In-game settings panel; account and per-character settings
 - **0.8.0** Tick/cross per quest, per character, expiring with the quest
 - **0.7.0** Split into separate files; main window
