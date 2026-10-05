@@ -282,6 +282,34 @@ local function RequestRewards(list)
 end
 
 ------------------------------------------------------------
+-- 5b. WEEKLY QUESTS already in your quest log
+------------------------------------------------------------
+local function CollectWeeklies()
+    local found = {}
+    if not (C_QuestLog.GetNumQuestLogEntries and C_QuestLog.GetInfo) then return found end
+    local WEEKLY = (Enum and Enum.QuestFrequency and Enum.QuestFrequency.Weekly) or 2
+    for i = 1, C_QuestLog.GetNumQuestLogEntries() do
+        local info = C_QuestLog.GetInfo(i)
+        if info and info.questID and not info.isHeader and not info.isHidden
+           and info.frequency == WEEKLY then
+            local ready = C_QuestLog.ReadyForTurnIn and C_QuestLog.ReadyForTurnIn(info.questID)
+            -- Progress text, e.g. "World Quests completed: 7/10"
+            local texts = {}
+            for _, o in ipairs(C_QuestLog.GetQuestObjectives(info.questID) or {}) do
+                if o.text and o.text ~= "" then table.insert(texts, o.text) end
+            end
+            table.insert(found, { questID = info.questID, title = info.title or ns.GetTitle(info.questID),
+                                  ready = ready == true, progress = table.concat(texts, ", ") })
+        end
+    end
+    table.sort(found, function(a, b)
+        if a.ready ~= b.ready then return a.ready end -- ready to hand in first
+        return a.title < b.title
+    end)
+    return found
+end
+
+------------------------------------------------------------
 -- 6. BUILD the sorted list (grouped by zone, best first)
 ------------------------------------------------------------
 local function BuildEntries(list)
@@ -352,7 +380,12 @@ local function BuildEntries(list)
         if e.isSA and not e.hidden then ready = ready + 1 end
     end
 
-    return { entries = entries, total = #list, worth = worth, ready = ready, locked = lockedCount }
+    local weeklies = settings.showWeeklies and CollectWeeklies() or {}
+    local handIn = 0
+    for _, w in ipairs(weeklies) do if w.ready then handIn = handIn + 1 end end
+
+    return { entries = entries, total = #list, worth = worth, ready = ready, locked = lockedCount,
+             weeklies = weeklies, handIn = handIn }
 end
 
 ------------------------------------------------------------
@@ -373,10 +406,18 @@ function ns.Scan(onDone)
             return
         end
         local result = BuildEntries(list)
-        if ns.Broker then ns.Broker:Update(result) end -- keep the panel icon's count fresh
+        if ns.SaveSnapshot then ns.SaveSnapshot(result) end -- for the Alts list
+        if ns.Broker then ns.Broker:Update(result) end      -- keep the panel icon's count fresh
         onDone(result)
     end
     attempt()
+end
+
+-- One weekly quest as a line of text
+function ns.FormatWeekly(w)
+    local status = w.ready and "|cff00ff00Ready to hand in!|r"
+        or ("|cffaaaaaa" .. (w.progress ~= "" and w.progress or "In progress") .. "|r")
+    return w.title .. " - " .. status
 end
 
 -- One quest as a line of text (used by both chat and the window)
@@ -393,6 +434,8 @@ function ns.SummaryText(r)
     if r.total == 0 and #r.entries == 0 then
         return "No world quests found. Open your world map, then Refresh."
     end
-    return ("%d of %d world quests worth doing. Special Assignments: %d ready, %d locked")
+    local text = ("%d of %d world quests worth doing. Special Assignments: %d ready, %d locked")
         :format(r.worth, r.total, r.ready, r.locked)
+    if (r.handIn or 0) > 0 then text = text .. (". |cff00ff00%d weekly to hand in|r"):format(r.handIn) end
+    return text
 end

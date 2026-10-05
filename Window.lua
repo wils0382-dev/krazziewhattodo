@@ -123,7 +123,7 @@ local function Create()
     -- Resizing: min and max sizes, plus a grab handle in the corner
     frame:SetResizable(true)
     if frame.SetResizeBounds then
-        frame:SetResizeBounds(320, 240, 1000, 1200)
+        frame:SetResizeBounds(400, 240, 1000, 1200)
     end
     local grip = CreateFrame("Button", nil, frame)
     grip:SetSize(16, 16)
@@ -163,6 +163,13 @@ local function Create()
     settingsButton:SetPoint("RIGHT", refresh, "LEFT", -4, 0)
     settingsButton:SetText("Settings")
     settingsButton:SetScript("OnClick", function() ns.SettingsPanel:Toggle(frame) end)
+
+    -- Alts button
+    local altsButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    altsButton:SetSize(50, 22)
+    altsButton:SetPoint("RIGHT", settingsButton, "LEFT", -4, 0)
+    altsButton:SetText("Alts")
+    altsButton:SetScript("OnClick", function() ns.Alts:Toggle(frame) end)
 
     -- "Show everything" tick box
     local box = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
@@ -274,16 +281,23 @@ function Window:Render(result, keepScroll)
     content:SetWidth(width)
     local y, lineCount, questCount, headerCount = 0, 0, 0, 0
 
-    local function Add(text, indent)
+    local function Add(text, indent, font)
         lineCount = lineCount + 1
         local fs = GetLine(lineCount)
-        fs:SetFontObject("GameFontHighlightSmall")
+        fs:SetFontObject(font or "GameFontHighlightSmall")
         fs:ClearAllPoints()
         fs:SetPoint("TOPLEFT", content, "TOPLEFT", indent, -y)
         fs:SetWidth(width - indent)
         fs:SetText(text)
         fs:Show()
         y = y + fs:GetStringHeight() + 4
+    end
+
+    -- "This week": weekly quests from your quest log
+    if result.weeklies and #result.weeklies > 0 then
+        Add("This week", 0, "GameFontNormal")
+        for _, w in ipairs(result.weeklies) do Add(ns.FormatWeekly(w), 16) end
+        y = y + 8
     end
 
     -- Group the visible entries by zone, keeping the sorted order

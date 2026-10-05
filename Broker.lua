@@ -31,6 +31,15 @@ function Broker:Init()
         OnTooltipShow = function(tooltip)
             tooltip:AddLine("|cffff9900Krazzie|r - What to do")
             if lastSummary then tooltip:AddLine(lastSummary, 1, 1, 1, true) end
+            -- Your characters, most to do first
+            local alts = ns.GetAltSummaries()
+            if #alts > 0 then
+                tooltip:AddLine(" ")
+                for i, entry in ipairs(alts) do
+                    if i > 10 then break end
+                    tooltip:AddLine(ns.AltLine(entry), 1, 1, 1)
+                end
+            end
             tooltip:AddLine(" ")
             tooltip:AddLine("|cffaaaaaaLeft-click:|r open or close")
             tooltip:AddLine("|cffaaaaaaRight-click:|r settings")
@@ -59,6 +68,8 @@ end
 function Broker:Update(result)
     lastSummary = ns.SummaryText(result)
     if dataObject then
-        dataObject.text = result.worth .. " to do"
+        local text = result.worth .. " to do"
+        if (result.handIn or 0) > 0 then text = text .. ", " .. result.handIn .. " to hand in" end
+        dataObject.text = text
     end
 end

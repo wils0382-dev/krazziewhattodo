@@ -34,6 +34,7 @@ ns.DEFAULTS = {
     closeOnEscape    = false, -- Esc (and opening the map) closes the window
     focusCurrentZone = false, -- expand only the zone you're in, collapse the rest
     showMinimap      = true,  -- show the minimap button
+    showWeeklies     = true,  -- show weekly quests from your quest log at the top
 }
 
 ------------------------------------------------------------

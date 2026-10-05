@@ -8,6 +8,9 @@
 local _, ns = ...
 
 local function PrintToChat(result, showAll)
+    for _, w in ipairs(result.weeklies or {}) do
+        print("  |cffffd100This week:|r " .. ns.FormatWeekly(w))
+    end
     local lastZone
     for _, e in ipairs(result.entries) do
         if e.rank or showAll then
@@ -45,6 +48,7 @@ end
 local watcher = CreateFrame("Frame")
 watcher:RegisterEvent("QUEST_TURNED_IN")   -- you handed in a quest
 watcher:RegisterEvent("AREA_POIS_UPDATED") -- map markers changed (SA unlocked, etc.)
+watcher:RegisterEvent("QUEST_ACCEPTED")    -- picked up a quest (e.g. a new weekly)
 -- Some world quests complete without a hand-in; register this one safely
 pcall(watcher.RegisterEvent, watcher, "WORLD_QUEST_COMPLETED_BY_SPELL")
 watcher:SetScript("OnEvent", function() RefreshSoon() end)

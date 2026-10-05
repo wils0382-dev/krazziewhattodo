@@ -33,6 +33,7 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `Debug.lua` | The `/kwtd debug` detective tool |
 | `Window.lua` | The main window |
 | `SettingsPanel.lua` | The settings panel beside the window |
+| `Alts.lua` | Per-character snapshots and the Alts panel |
 | `Broker.lua` | Titan Panel and minimap icon |
 | `Core.lua` | Start-up, auto-refresh and slash commands |
 
@@ -56,7 +57,8 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - [ ] Minimum amounts per currency
 - [x] Turn categories on/off (per character via separate settings)
 - [x] "Any gear" category (for disenchanting), separate from upgrades
-- [ ] Alt hand-off: suggest which character to log onto next
+- [x] Alt hand-off: suggest which character to log onto next
+- [x] Weekly quests from the quest log, with ready-to-hand-in alerts
 - [ ] World bosses
 - [ ] Profession dailies/weeklies based on the character's professions
 - [ ] Off-hand comparison for dual-wielders
@@ -65,6 +67,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Version history
 
+- **0.15.0** "This week" section for weekly quests in your log; Alts panel with next-up suggestion; alts in the Titan tooltip
 - **0.14.2** Off-hand rewards no longer count as upgrades for characters wielding a two-hander
 - **0.14.1** Scans retry while reward data is still loading; refresh after loading screens
 - **0.14.0** Reputation rewards split from currencies into their own category (off by default)

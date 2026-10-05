@@ -7,7 +7,7 @@ ns.SettingsPanel = Panel
 
 local WIDTH, PAD, ROW = 300, 12, 22
 local PRIORITY_TOP = 192   -- where the priority list starts
-local LOWER_HEIGHT = 170   -- height of the "On login" + "Window" sections
+local LOWER_HEIGHT = 194   -- height of the "On login" + "Window" sections
 
 local LABELS = {
     pick    = "Your picks (ticked quests)",
@@ -20,7 +20,7 @@ local LABELS = {
 }
 
 local panel, prioFrame, lower
-local ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox, minimapBox
+local ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox, minimapBox, weeklyBox
 local rows = {}
 
 -- Friendly name for a category, including learned currencies
@@ -200,6 +200,10 @@ local function Create(parent)
         ns.SetSetting("showMinimap", on and true or false)
         Changed()
     end)
+    weeklyBox = TickBox(lower, "Show weekly quests from my quest log", -4, -170, function(on)
+        ns.SetSetting("showWeeklies", on and true or false)
+        Changed()
+    end)
 
     -- Reset
     local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
@@ -256,6 +260,7 @@ function Panel:Update()
     escBox:SetChecked(s.closeOnEscape)
     focusBox:SetChecked(s.focusCurrentZone)
     minimapBox:SetChecked(s.showMinimap)
+    weeklyBox:SetChecked(s.showWeeklies)
 end
 
 ------------------------------------------------------------
