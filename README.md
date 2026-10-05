@@ -51,9 +51,10 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - [x] Window comfort: stays open with the map, resizing, collapsible zones (focus on current zone)
 - [x] Titan Panel / minimap icon (LibDataBroker, borrowed from Routine/Titan)
 - [x] Quests tick themselves off when handed in
-- [ ] Currency rewards as priority categories with thresholds
-- [ ] Turn categories on/off per character
-- [ ] "Any gear" category (for disenchanting), separate from upgrades
+- [x] Currency rewards as priority categories (learned automatically)
+- [ ] Minimum amounts per currency
+- [x] Turn categories on/off (per character via separate settings)
+- [x] "Any gear" category (for disenchanting), separate from upgrades
 - [ ] Alt hand-off: suggest which character to log onto next
 - [ ] World bosses
 - [ ] Profession dailies/weeklies based on the character's professions
@@ -62,6 +63,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Version history
 
+- **0.13.0** Categories can be switched off; any-gear category; currencies learned from rewards as categories
 - **0.12.0** Titan Panel and minimap icon with a to-do count
 - **0.11.0** Auto-refresh on quest hand-in and when map markers change; completed quests filtered out
 - **0.10.0** Window stays open with the map; resizable; collapsible zones; focus on current zone

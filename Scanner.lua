@@ -39,6 +39,34 @@ local function GetGear(questID)
     return nil
 end
 
+-- Currency rewards: list of { id, name, amount }
+local function GetCurrencies(questID)
+    local found = {}
+    if C_QuestLog.GetQuestRewardCurrencies then
+        local ok, list = pcall(C_QuestLog.GetQuestRewardCurrencies, questID)
+        if ok and list then
+            for _, c in ipairs(list) do
+                if c.currencyID then
+                    table.insert(found, { id = c.currencyID, name = c.name,
+                        amount = c.totalRewardAmount or c.baseRewardAmount or 0 })
+                end
+            end
+            return found
+        end
+    end
+    -- Older way of asking, in case the newer one isn't available
+    if GetNumQuestLogRewardCurrencies then
+        local ok, count = pcall(GetNumQuestLogRewardCurrencies, questID)
+        for i = 1, (ok and count or 0) do
+            local ok2, name, _, amount, currencyID = pcall(GetQuestLogRewardCurrencyInfo, i, questID)
+            if ok2 and currencyID then
+                table.insert(found, { id = currencyID, name = name, amount = amount or 0 })
+            end
+        end
+    end
+    return found
+end
+
 function ns.GetTitle(questID)
     local title = C_TaskQuest.GetQuestInfoByQuestID and C_TaskQuest.GetQuestInfoByQuestID(questID)
     return title or ("Quest " .. questID)
@@ -164,6 +192,22 @@ local function Evaluate(questID, zoneHasLockedSA, settings)
         end
     end
 
+    -- Any gear (for disenchanting) - only if it isn't already an upgrade
+    local isUpgrade = false
+    for _, r in ipairs(reasons) do if r.category == "gear" then isUpgrade = true end end
+    if gear and not isUpgrade then
+        table.insert(reasons, { category = "anygear",
+            text = ("|cffccccccGear|r %s (ilvl %s)"):format(gear.name or "item", gear.itemLevel or "?") })
+    end
+
+    -- Currencies: each one is its own category, learned as we see it
+    local currencies = GetCurrencies(questID)
+    for _, c in ipairs(currencies) do
+        ns.LearnCurrency(c.id, c.name)
+        table.insert(reasons, { category = "cur:" .. c.id,
+            text = ("|cff40c0ff%d %s|r"):format(c.amount, c.name or "currency") })
+    end
+
     -- Gold
     local copper = GetGold(questID)
     if copper >= settings.minGold * 10000 then -- 1 gold = 10,000 copper
@@ -179,6 +223,7 @@ local function Evaluate(questID, zoneHasLockedSA, settings)
     local summary = {}
     if copper > 0 then table.insert(summary, GetCoinTextureString(copper)) end
     if gear then table.insert(summary, ("%s (ilvl %s)"):format(gear.name or "item", gear.itemLevel or "?")) end
+    for _, c in ipairs(currencies) do table.insert(summary, ("%d %s"):format(c.amount, c.name or "currency")) end
     if #summary == 0 then table.insert(summary, "other reward") end
 
     return reasons, table.concat(summary, ", "), copper, isSA
@@ -242,6 +287,13 @@ local function BuildEntries(list)
             table.insert(reasons, { category = "pick", text = "|cff66ccffYour pick|r" })
         end
 
+        -- Drop reasons for categories you've switched off
+        local kept = {}
+        for _, r in ipairs(reasons) do
+            if not ns.IsCategoryOff(settings, r.category) then table.insert(kept, r) end
+        end
+        reasons = kept
+
         local best
         for _, r in ipairs(reasons) do
             local rank = ranks[r.category] or 99
@@ -254,7 +306,8 @@ local function BuildEntries(list)
                                 isQuest = true, isSA = isSA, choice = choice, hidden = choice == "no" })
     end
 
-    for _, sa in ipairs(specials) do
+    local saOff = ns.IsCategoryOff(settings, "sa")
+    for _, sa in ipairs(saOff and {} or specials) do
         local status = sa.locked
             and ("Locked" .. (sa.remaining and (" - %d more WQ to unlock"):format(sa.remaining) or ""))
             or "Ready"

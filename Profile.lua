@@ -70,28 +70,61 @@ function ns.ResetActive()
     for k in pairs(store) do store[k] = nil end
 end
 
--- Make sure a saved priority list has every category exactly once
--- (protects old saves if new categories are added in future versions)
+------------------------------------------------------------
+-- Currencies Krazzie has seen in quest rewards (shared by all characters)
+------------------------------------------------------------
+function ns.GetKnownCurrencies()
+    local db = ns.GetDB()
+    db.account.currencies = db.account.currencies or {}
+    return db.account.currencies
+end
+
+function ns.LearnCurrency(currencyID, name)
+    if currencyID and name then ns.GetKnownCurrencies()[currencyID] = name end
+end
+
+-- Is a category switched off? Currencies ("cur:1234") are off unless ticked.
+function ns.IsCategoryOff(settings, category)
+    local value = settings.off and settings.off[category]
+    if category:sub(1, 4) == "cur:" then return value ~= false end
+    return value == true
+end
+
+-- Make sure a saved priority list has every category exactly once.
+-- New categories (future versions, newly seen currencies) join the bottom.
 local function CleanPriority(list)
+    local all = {}
+    for _, c in ipairs(ns.DEFAULTS.priority) do table.insert(all, c) end
+    local currencies = {}
+    for id, name in pairs(ns.GetKnownCurrencies()) do
+        table.insert(currencies, { key = "cur:" .. id, name = name })
+    end
+    table.sort(currencies, function(a, b) return a.name < b.name end)
+    for _, c in ipairs(currencies) do table.insert(all, c.key) end
+
     local result, seen, valid = {}, {}, {}
-    for _, c in ipairs(ns.DEFAULTS.priority) do valid[c] = true end
+    for _, c in ipairs(all) do valid[c] = true end
     for _, c in ipairs(list or {}) do
         if valid[c] and not seen[c] then table.insert(result, c); seen[c] = true end
     end
-    for _, c in ipairs(ns.DEFAULTS.priority) do
+    for _, c in ipairs(all) do
         if not seen[c] then table.insert(result, c) end
     end
     return result
 end
 
--- The settings that actually apply right now
+-- The settings that actually apply right now.
+-- Everything is copied, so changing the result never edits the save file by accident.
 function ns.GetSettings()
     local result = CopyTable(ns.DEFAULTS)
-    for k, v in pairs(ns.GetDB().account.settings) do result[k] = v end
-    local char = ns.GetCharDB()
-    if char.useOwn and char.settings then
-        for k, v in pairs(char.settings) do result[k] = v end
+    local function Layer(source)
+        for k, v in pairs(source) do
+            result[k] = type(v) == "table" and CopyTable(v) or v
+        end
     end
+    Layer(ns.GetDB().account.settings)
+    local char = ns.GetCharDB()
+    if char.useOwn and char.settings then Layer(char.settings) end
     result.priority = CleanPriority(result.priority)
     return result
 end
