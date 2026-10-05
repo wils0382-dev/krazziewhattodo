@@ -67,6 +67,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Version history
 
+- **1.0.0** World quest planner complete: rules, Special Assignments, priorities, per-character choices and settings, weeklies, alts, Titan Panel
 - **0.15.0** "This week" section for weekly quests in your log; Alts panel with next-up suggestion; alts in the Titan tooltip
 - **0.14.2** Off-hand rewards no longer count as upgrades for characters wielding a two-hander
 - **0.14.1** Scans retry while reward data is still loading; refresh after loading screens
