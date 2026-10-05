@@ -77,6 +77,17 @@ function ns.ZoneName(mapID)
     return info and info.name or ("Map " .. mapID)
 end
 
+-- Two-handed weapons fill both hands, so an off-hand is useless next to one
+local TWO_HANDED = { INVTYPE_2HWEAPON = true, INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true }
+local OFF_HAND   = { INVTYPE_WEAPONOFFHAND = true, INVTYPE_SHIELD = true, INVTYPE_HOLDABLE = true }
+
+local function UsingTwoHanderOnly()
+    local mainHand = GetInventoryItemLink("player", 16)
+    if not mainHand or GetInventoryItemLink("player", 17) then return false end
+    local _, _, _, equipLoc = C_Item.GetItemInfoInstant(mainHand)
+    return TWO_HANDED[equipLoc] == true
+end
+
 -- Item level of what you're wearing in the given slot(s). Empty slot = 0.
 local function GetEquippedLevel(slots)
     local lowest
@@ -181,6 +192,8 @@ local function Evaluate(questID, zoneHasLockedSA, settings)
     local gear = GetGear(questID)
     if gear and gear.isUsable and gear.itemLevel then
         local slots = ns.SLOTS[gear.equipLoc]
+        -- An off-hand isn't an upgrade if you wield a two-hander with an empty off-hand
+        if OFF_HAND[gear.equipLoc] and UsingTwoHanderOnly() then slots = nil end
         if slots then
             local current = GetEquippedLevel(slots)
             local gain = gear.itemLevel - current

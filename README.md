@@ -61,9 +61,11 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - [ ] Profession dailies/weeklies based on the character's professions
 - [ ] Off-hand comparison for dual-wielders
 - [ ] Map events (e.g. Saltheril's Soiree, Void incursions)
+- [ ] Weekly activities (e.g. Saltheril's Soiree, Bountiful Delve gilded rewards, other weeklies)
 
 ## Version history
 
+- **0.14.2** Off-hand rewards no longer count as upgrades for characters wielding a two-hander
 - **0.14.1** Scans retry while reward data is still loading; refresh after loading screens
 - **0.14.0** Reputation rewards split from currencies into their own category (off by default)
 - **0.13.0** Categories can be switched off; any-gear category; currencies learned from rewards as categories
