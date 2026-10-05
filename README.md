@@ -33,7 +33,8 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `Debug.lua` | The `/kwtd debug` detective tool |
 | `Window.lua` | The main window |
 | `SettingsPanel.lua` | The settings panel beside the window |
-| `Core.lua` | Start-up and slash commands |
+| `Broker.lua` | Titan Panel and minimap icon |
+| `Core.lua` | Start-up, auto-refresh and slash commands |
 
 Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
@@ -48,7 +49,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 ## Roadmap
 
 - [x] Window comfort: stays open with the map, resizing, collapsible zones (focus on current zone)
-- [ ] Titan Panel / minimap icon (LibDataBroker)
+- [x] Titan Panel / minimap icon (LibDataBroker, borrowed from Routine/Titan)
 - [x] Quests tick themselves off when handed in
 - [ ] Currency rewards as priority categories with thresholds
 - [ ] Turn categories on/off per character
@@ -61,6 +62,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Version history
 
+- **0.12.0** Titan Panel and minimap icon with a to-do count
 - **0.11.0** Auto-refresh on quest hand-in and when map markers change; completed quests filtered out
 - **0.10.0** Window stays open with the map; resizable; collapsible zones; focus on current zone
 - **0.9.0** In-game settings panel; account and per-character settings

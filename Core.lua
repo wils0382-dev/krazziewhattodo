@@ -21,14 +21,23 @@ local function PrintToChat(result, showAll)
     ns.Say(ns.SummaryText(result))
 end
 
--- On login or /reload: wait 5 seconds for the game to settle, then go
+-- On login or /reload: set up the panel icon, wait 5 seconds, then scan
+local brokerReady = false
 local events = CreateFrame("Frame")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 events:SetScript("OnEvent", function(_, _, isInitialLogin, isReloadingUi)
     if isInitialLogin or isReloadingUi then
+        if not brokerReady then
+            ns.Broker:Init()
+            brokerReady = true
+        end
         C_Timer.After(5, function()
             local settings = ns.GetSettings()
-            if settings.openOnLogin then ns.Window:Open() end
+            if settings.openOnLogin then
+                ns.Window:Open()
+            else
+                ns.Scan(function() end) -- still scan, so the panel icon has a count
+            end
             if settings.chatOnLogin then
                 ns.Scan(function(result) PrintToChat(result, false) end)
             end
@@ -49,7 +58,11 @@ local function RefreshSoon()
     refreshPending = true
     C_Timer.After(2, function()
         refreshPending = false
-        if ns.Window:IsShown() then ns.Window:Refresh(true) end
+        if ns.Window:IsShown() then
+            ns.Window:Refresh(true)
+        else
+            ns.Scan(function() end) -- window closed: just update the panel icon's count
+        end
     end)
 end
 

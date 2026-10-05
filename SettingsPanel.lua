@@ -14,7 +14,7 @@ local LABELS = {
     unlock = "Unlocks a Special Assignment",
 }
 
-local panel, ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox
+local panel, ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox, minimapBox
 local rows = {}
 
 ------------------------------------------------------------
@@ -23,6 +23,7 @@ local rows = {}
 local function Changed()
     Panel:Update()
     ns.Window:ApplySettings()
+    ns.Broker:ApplySettings()
     ns.Window:Refresh(true)
 end
 
@@ -93,7 +94,7 @@ end
 ------------------------------------------------------------
 local function Create(parent)
     panel = CreateFrame("Frame", "KrazzieSettingsPanel", parent, "BackdropTemplate")
-    panel:SetSize(WIDTH, 500)
+    panel:SetSize(WIDTH, 530)
     panel:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -154,6 +155,10 @@ local function Create(parent)
         ns.SetSetting("focusCurrentZone", on and true or false)
         Changed()
     end)
+    minimapBox = TickBox("Show minimap button", y - 146, function(on)
+        ns.SetSetting("showMinimap", on and true or false)
+        Changed()
+    end)
 
     -- Reset
     local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
@@ -194,6 +199,7 @@ function Panel:Update()
     chatBox:SetChecked(s.chatOnLogin)
     escBox:SetChecked(s.closeOnEscape)
     focusBox:SetChecked(s.focusCurrentZone)
+    minimapBox:SetChecked(s.showMinimap)
 end
 
 ------------------------------------------------------------

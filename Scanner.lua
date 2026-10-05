@@ -285,7 +285,11 @@ end
 ------------------------------------------------------------
 function ns.Scan(onDone)
     local list = CollectWorldQuests()
-    local function finish() onDone(BuildEntries(list)) end
+    local function finish()
+        local result = BuildEntries(list)
+        if ns.Broker then ns.Broker:Update(result) end -- keep the panel icon's count fresh
+        onDone(result)
+    end
     if RequestRewards(list) > 0 then
         C_Timer.After(3, finish) -- give reward data time to load
     else

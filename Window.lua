@@ -372,6 +372,11 @@ function Window:Open()
     Window:Refresh()
 end
 
+function Window:OpenSettings()
+    Window:Open()
+    ns.SettingsPanel:Toggle(frame)
+end
+
 function Window:IsShown()
     return frame ~= nil and frame:IsShown()
 end
