@@ -36,6 +36,30 @@ events:SetScript("OnEvent", function(_, _, isInitialLogin, isReloadingUi)
     end
 end)
 
+------------------------------------------------------------
+-- AUTO-REFRESH: when you hand in a quest, or map markers change
+-- (e.g. a Special Assignment unlocks), refresh the open window.
+------------------------------------------------------------
+local refreshPending = false
+
+-- Waits 2 seconds so the game's map data can catch up. Extra events in
+-- those 2 seconds are ignored, so a burst of updates = one refresh.
+local function RefreshSoon()
+    if refreshPending then return end
+    refreshPending = true
+    C_Timer.After(2, function()
+        refreshPending = false
+        if ns.Window:IsShown() then ns.Window:Refresh(true) end
+    end)
+end
+
+local watcher = CreateFrame("Frame")
+watcher:RegisterEvent("QUEST_TURNED_IN")   -- you handed in a quest
+watcher:RegisterEvent("AREA_POIS_UPDATED") -- map markers changed (SA unlocked, etc.)
+-- Some world quests complete without a hand-in; register this one safely
+pcall(watcher.RegisterEvent, watcher, "WORLD_QUEST_COMPLETED_BY_SPELL")
+watcher:SetScript("OnEvent", RefreshSoon)
+
 SLASH_KRAZZIEWTD1 = "/kwtd"
 SlashCmdList.KRAZZIEWTD = function(msg)
     msg = (msg or ""):lower()

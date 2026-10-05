@@ -2,7 +2,7 @@
 ## Title: |cffff9900Krazzie|r - What to do
 ## Notes: Finds the world quests worth doing for each character.
 ## Author: James
-## Version: 0.10.0
+## Version: 0.11.0
 ## SavedVariables: KrazzieDB
 
 Settings.lua

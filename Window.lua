@@ -372,6 +372,10 @@ function Window:Open()
     Window:Refresh()
 end
 
+function Window:IsShown()
+    return frame ~= nil and frame:IsShown()
+end
+
 function Window:Toggle()
     if frame and frame:IsShown() then
         frame:Hide()

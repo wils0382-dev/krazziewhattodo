@@ -192,7 +192,9 @@ local function CollectWorldQuests()
     for _, zoneID in ipairs(ns.ZONES) do
         for _, info in ipairs(C_TaskQuest.GetQuestsOnMap(zoneID) or {}) do
             local questID = info.questID or info.questId
-            if questID and not seen[questID] and C_QuestLog.IsWorldQuest(questID) then
+            -- Skip quests you've already done (the map can lag a few seconds behind)
+            local done = C_QuestLog.IsQuestFlaggedCompleted and C_QuestLog.IsQuestFlaggedCompleted(questID)
+            if questID and not seen[questID] and not done and C_QuestLog.IsWorldQuest(questID) then
                 seen[questID] = true
                 table.insert(found, { questID = questID, zoneID = info.mapID or zoneID })
             end
