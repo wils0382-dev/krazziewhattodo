@@ -6,6 +6,7 @@
 -- /kwtd debug     = hidden labels for the zone you're in (saved to file)
 -- /kwtd caps      = every known currency and its weekly/total limits
 -- /kwtd att       = what All The Things exposes to other addons (saved to file)
+-- /kwtd att2      = ATT's database layout and test searches (saved to file)
 
 local _, ns = ...
 
@@ -92,6 +93,8 @@ SlashCmdList.KRAZZIEWTD = function(msg)
         ns.DebugCaps()
     elseif msg == "att" then
         ns.DebugATT()
+    elseif msg == "att2" then
+        ns.DebugATT2()
     elseif msg:find("chat") then
         local showAll = msg:find("all") ~= nil
         ns.Scan(function(result) PrintToChat(result, showAll) end)

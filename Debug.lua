@@ -122,3 +122,102 @@ function ns.DebugATT()
     ns.Say(("ATT check done (loaded: %s, %d main tables found). Type /reload to save it to file.")
         :format(tostring(loaded), tables))
 end
+
+------------------------------------------------------------
+-- /kwtd att2 : look deeper into ATT. Its database layout, test
+-- searches (Brewfest), and the rest of its entries. Saved to file.
+------------------------------------------------------------
+function ns.DebugATT2()
+    KrazzieDB = KrazzieDB or {}
+    KrazzieDB.debug = {}
+    local function Log(line) table.insert(KrazzieDB.debug, line) end
+
+    local ATT = _G.ATTC or _G.AllTheThings
+    if type(ATT) ~= "table" then
+        ns.Say("ATT isn't loaded.")
+        return
+    end
+
+    -- Read a field safely (ATT objects work some values out on the fly)
+    local function Get(obj, field)
+        local ok, value = pcall(function() return obj[field] end)
+        if ok then return value end
+    end
+
+    -- One-line description of an ATT object: its useful simple fields
+    local FIELDS = { "key", "text", "name", "headerID", "eventID", "npcID", "questID", "itemID",
+                     "mountID", "speciesID", "toyID", "achievementID", "decorID", "currencyID",
+                     "collectible", "collected", "saved", "e", "u" }
+    local function Describe(obj)
+        local parts = {}
+        for _, f in ipairs(FIELDS) do
+            local v = Get(obj, f)
+            if v ~= nil and type(v) ~= "table" and type(v) ~= "function" then
+                table.insert(parts, f .. "=" .. tostring(v):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+            end
+        end
+        return table.concat(parts, " ")
+    end
+
+    -- 1. Database layout
+    local ok, root = pcall(ATT.GetDatabaseRoot)
+    if ok and type(root) == "table" then
+        Log("-- Database root: " .. Describe(root) .. " --")
+        local children = Get(root, "g")
+        if type(children) == "table" then
+            for i, child in ipairs(children) do
+                Log(("[%d] %s"):format(i, Describe(child)))
+                local label = tostring(Get(child, "text") or Get(child, "name") or ""):lower()
+                if label:find("holiday") or label:find("event") then
+                    local sub = Get(child, "g")
+                    if type(sub) == "table" then
+                        for j, s in ipairs(sub) do
+                            if j > 80 then Log("   ...more") break end
+                            Log(("   [%d.%d] %s"):format(i, j, Describe(s)))
+                        end
+                    end
+                end
+            end
+        else
+            Log("Root has no 'g' (children) list")
+        end
+    else
+        Log("GetDatabaseRoot failed: " .. tostring(root))
+    end
+
+    -- 2. Test searches: Swift Brewfest Ram, Great Brewfest Kodo, Coren Direbrew
+    local TESTS = { { "itemID", 33977 }, { "itemID", 37828 }, { "npcID", 23872 } }
+    for _, test in ipairs(TESTS) do
+        local field, id = test[1], test[2]
+        local ok2, results = pcall(ATT.SearchForField, field, id)
+        Log(("-- SearchForField(%s, %d): ok=%s type=%s count=%s --"):format(field, id, tostring(ok2),
+            type(results), type(results) == "table" and tostring(#results) or "-"))
+        if ok2 and type(results) == "table" then
+            for i, r in ipairs(results) do
+                if i > 3 then break end
+                Log("  result: " .. Describe(r))
+                local parent, depth = Get(r, "parent"), 0
+                while type(parent) == "table" and depth < 8 do
+                    Log("    parent: " .. Describe(parent))
+                    parent, depth = Get(parent, "parent"), depth + 1
+                end
+            end
+        elseif not ok2 then
+            Log("  error: " .. tostring(results))
+        end
+        local ok3, obj = pcall(ATT.SearchForObject, field, id)
+        Log(("  SearchForObject: ok=%s %s"):format(tostring(ok3),
+            type(obj) == "table" and Describe(obj) or tostring(obj)))
+    end
+
+    -- 3. The rest of ATT's entries (the first check stopped at 400)
+    local keys = {}
+    for k, v in pairs(ATT) do table.insert(keys, ("%s (%s)"):format(tostring(k), type(v))) end
+    table.sort(keys)
+    Log("-- ATT entries from 'Sort' onwards --")
+    for _, k in ipairs(keys) do
+        if k >= "Sort" then Log(k) end
+    end
+
+    ns.Say("ATT deep check done. Type /reload to save it to file.")
+end
