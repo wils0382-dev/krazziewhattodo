@@ -70,6 +70,60 @@ local function NameOf(obj, key, id)
     return ("%s #%s"):format(TYPES[key] or tostring(key), tostring(id))
 end
 
+-- Turn a small table into text, e.g. { {"c", 1, 100} } -> {{c,1,100}} (for the debug file)
+local function Serialize(value, depth)
+    depth = depth or 0
+    if type(value) ~= "table" then return tostring(value) end
+    if depth > 3 then return "{...}" end
+    local parts = {}
+    for k, v in pairs(value) do
+        local text = Serialize(v, depth + 1)
+        if type(k) ~= "number" then text = tostring(k) .. "=" .. text end
+        table.insert(parts, text)
+    end
+    return "{" .. table.concat(parts, ",") .. "}"
+end
+
+------------------------------------------------------------
+-- Costs. ATT writes a price as { {"i", itemID, amount} } or { {"c", currencyID, amount} }
+------------------------------------------------------------
+local function HeldAmount(kind, id)
+    if kind == "i" then
+        -- bags, bank, reagent bank and warband bank
+        local ok, count = pcall(C_Item.GetItemCount, id, true, false, true, true)
+        return (ok and count) or 0
+    elseif kind == "c" then
+        local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, id)
+        return (ok and info and info.quantity) or 0
+    end
+    return 0
+end
+
+local function CostName(kind, id)
+    if kind == "i" then
+        local name = C_Item.GetItemNameByID(id)
+        if not name then C_Item.RequestLoadItemDataByID(id) end
+        return name or ("item " .. id)
+    elseif kind == "c" then
+        local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, id)
+        return (ok and info and info.name) or ("currency " .. id)
+    end
+    return tostring(kind) .. " " .. tostring(id)
+end
+
+local function CanAfford(cost)
+    for _, part in ipairs(cost) do
+        if type(part) == "table" and HeldAmount(part[1], part[2]) < (part[3] or 1) then return false end
+    end
+    return true
+end
+
+-- 4925 -> "4,925"
+local function Comma(n)
+    if BreakUpLargeNumbers then return BreakUpLargeNumbers(n) end
+    return tostring(n)
+end
+
 local function IsQuestDone(questID)
     if C_QuestLog.IsQuestFlaggedCompleted and C_QuestLog.IsQuestFlaggedCompleted(questID) then return true end
     if C_QuestLog.IsQuestFlaggedCompletedOnAccount and C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID) then return true end
@@ -113,7 +167,7 @@ local function Walk(node, path, out, seen, depth, counter, questID)
                 if not seen[dedupe] then -- ATT lists some things twice (Alliance + Horde)
                     seen[dedupe] = true
                     table.insert(out, { type = TYPES[key], name = NameOf(child, key, id),
-                                        source = path, quest = childQuest })
+                                        source = path, quest = childQuest, cost = Get(child, "cost") })
                 end
             end
             local label = Get(child, "text")
@@ -140,11 +194,11 @@ local function GroupByActivity(missing, eventName)
         label = label:gsub("%s+$", "")
         local a = byLabel[label]
         if not a then
-            a = { label = label, counts = {}, quests = {} }
+            a = { label = label, items = {}, quests = {} }
             byLabel[label] = a
             table.insert(list, a)
         end
-        a.counts[m.type] = (a.counts[m.type] or 0) + 1
+        table.insert(a.items, m)
         if m.quest then a.quests[m.quest] = true end
     end
     return list
@@ -202,15 +256,52 @@ end
 -- Returns text, best type rank (for sorting), done today?  or nil if nothing you want.
 function Events:Describe(activity, settings)
     local off = settings.eventTypesOff or {}
+
+    -- Count the types you care about, and add up prices for the ones with a cost
+    local counts = {}
+    local totals, totalOrder = {}, {}
+    local priced, affordable = 0, 0
+    for _, m in ipairs(activity.items) do
+        if not off[m.type] then
+            counts[m.type] = (counts[m.type] or 0) + 1
+            if type(m.cost) == "table" and #m.cost > 0 then
+                priced = priced + 1
+                if CanAfford(m.cost) then affordable = affordable + 1 end
+                for _, part in ipairs(m.cost) do
+                    if type(part) == "table" then
+                        local key = tostring(part[1]) .. ":" .. tostring(part[2])
+                        if not totals[key] then
+                            totals[key] = { kind = part[1], id = part[2], amount = 0 }
+                            table.insert(totalOrder, key)
+                        end
+                        totals[key].amount = totals[key].amount + (part[3] or 1)
+                    end
+                end
+            end
+        end
+    end
+
     local parts, bestRank = {}, nil
     for _, t in ipairs(TYPE_ORDER) do
-        local n = activity.counts[t]
-        if n and n > 0 and not off[t] then
+        local n = counts[t]
+        if n and n > 0 then
             table.insert(parts, n .. " " .. t)
             bestRank = bestRank or TYPE_RANK[t]
         end
     end
     if #parts == 0 then return nil end
+
+    -- e.g. " · 3 affordable now (320/4,925 Brewfest Prize Token)"
+    local costText = ""
+    if priced > 0 then
+        local held = {}
+        for _, key in ipairs(totalOrder) do
+            local t = totals[key]
+            table.insert(held, ("%s/%s %s"):format(Comma(HeldAmount(t.kind, t.id)), Comma(t.amount), CostName(t.kind, t.id)))
+        end
+        costText = (" %s|cff%s%d affordable now|r |cffaaaaaa(%s)|r"):format("\194\183 ",
+            affordable > 0 and "00ff00" or "aaaaaa", affordable, table.concat(held, ", "))
+    end
 
     -- Done today = it has quests above it, and they're all complete
     local hasQuest, allDone = false, true
@@ -220,7 +311,7 @@ function Events:Describe(activity, settings)
     end
     local done = hasQuest and allDone
 
-    local text = activity.label .. " - " .. table.concat(parts, ", ")
+    local text = activity.label .. " - " .. table.concat(parts, ", ") .. costText
     if done then text = "|cff888888" .. text .. " (done today)|r" end
     return text, bestRank, done
 end
@@ -268,6 +359,7 @@ function Events:Missing(eventName)
     KrazzieDB = KrazzieDB or {}
     KrazzieDB.debug = { ("%s: %d missing, %d entries checked"):format(title, #missing, checked) }
     for _, m in ipairs(missing) do
-        table.insert(KrazzieDB.debug, ("%s | %s | %s | quest=%s"):format(m.type, m.name, m.source, tostring(m.quest)))
+        table.insert(KrazzieDB.debug, ("%s | %s | %s | quest=%s | cost=%s")
+            :format(m.type, m.name, m.source, tostring(m.quest), Serialize(m.cost)))
     end
 end

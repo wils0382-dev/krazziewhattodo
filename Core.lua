@@ -73,6 +73,22 @@ watcher:SetScript("OnEvent", function(_, event)
     RefreshSoon()
 end)
 
+-- Light redraws: when bags or currencies change, only redraw (so token
+-- counts on event lines stay current) - no rescan, so it's cheap.
+local redrawPending = false
+local function RedrawSoon()
+    if redrawPending then return end
+    redrawPending = true
+    C_Timer.After(1, function()
+        redrawPending = false
+        ns.Window:Redraw()
+    end)
+end
+local light = CreateFrame("Frame")
+pcall(light.RegisterEvent, light, "BAG_UPDATE_DELAYED")
+pcall(light.RegisterEvent, light, "CURRENCY_DISPLAY_UPDATE")
+light:SetScript("OnEvent", RedrawSoon)
+
 ------------------------------------------------------------
 -- LOGIN, /reload and loading screens
 ------------------------------------------------------------

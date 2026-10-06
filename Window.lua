@@ -425,6 +425,11 @@ function Window:OpenSettings()
     ns.SettingsPanel:Toggle(frame)
 end
 
+-- Redraw from the last scan without rescanning (e.g. token counts changed)
+function Window:Redraw()
+    if frame and frame:IsShown() and lastResult then Window:Render(lastResult, true) end
+end
+
 function Window:IsShown()
     return frame ~= nil and frame:IsShown()
 end
