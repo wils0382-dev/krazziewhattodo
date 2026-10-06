@@ -8,7 +8,7 @@ ns.SettingsPanel = Panel
 local WIDTH, PAD, ROW = 300, 12, 22
 local SECTION_ROWS = 3     -- weekly, zones, events
 local PRIORITY_TOP = 192 + 20 + SECTION_ROWS * 22 + 12 -- priority list starts below the section order
-local LOWER_HEIGHT = 396   -- height of the "On login" + "Window" sections
+local LOWER_HEIGHT = 420   -- height of the "On login" + "Window" sections
 
 local LABELS = {
     pick    = "Your picks (ticked quests)",
@@ -29,7 +29,7 @@ local SECTION_LABELS = {
     zones  = "World quests by zone",
     events = "Running events",
 }
-local eventsBox
+local eventsBox, emptySlotBox
 local typeBoxes = {}
 
 -- Friendly name for a category, including learned currencies
@@ -243,10 +243,14 @@ local function Create(parent)
         ns.SetSetting("respectCaps", on and true or false)
         Changed()
     end)
+    emptySlotBox = TickBox(lower, "Count empty slots as gear upgrades", -4, -218, function(on)
+        ns.SetSetting("emptySlotUpgrades", on and true or false)
+        Changed()
+    end)
 
     -- Event goals (needs All The Things)
-    Label(lower, "Event goals (needs All The Things)", 0, -228, "GameFontNormal")
-    eventsBox = TickBox(lower, "Show running events", -4, -248, function(on)
+    Label(lower, "Event goals (needs All The Things)", 0, -252, "GameFontNormal")
+    eventsBox = TickBox(lower, "Show running events", -4, -272, function(on)
         ns.SetSetting("showEvents", on and true or false)
         Changed()
     end)
@@ -254,7 +258,7 @@ local function Create(parent)
     for i, typeName in ipairs(ns.EVENT_TYPES) do
         local column = (i - 1) % 2
         local rowNumber = math.floor((i - 1) / 2)
-        typeBoxes[typeName] = TickBox(lower, typeName, -4 + column * 135, -272 - rowNumber * 24, function(on)
+        typeBoxes[typeName] = TickBox(lower, typeName, -4 + column * 135, -296 - rowNumber * 24, function(on)
             local off = ns.GetSettings().eventTypesOff or {}
             off[typeName] = (not on) or nil
             ns.SetSetting("eventTypesOff", off)
@@ -330,6 +334,7 @@ function Panel:Update()
     minimapBox:SetChecked(s.showMinimap)
     weeklyBox:SetChecked(s.showWeeklies)
     capsBox:SetChecked(s.respectCaps)
+    emptySlotBox:SetChecked(s.emptySlotUpgrades)
     eventsBox:SetChecked(s.showEvents)
     for typeName, box in pairs(typeBoxes) do
         box:SetChecked(not (s.eventTypesOff and s.eventTypesOff[typeName]))

@@ -77,9 +77,13 @@ function ns.ZoneName(mapID)
     return info and info.name or ("Map " .. mapID)
 end
 
--- Two-handed weapons fill both hands, so an off-hand is useless next to one
+-- Two-handed weapons fill both hands. Next to one, neither an off-hand nor a single
+-- one-hander is a real upgrade (swapping would leave a hand empty).
 local TWO_HANDED = { INVTYPE_2HWEAPON = true, INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true }
-local OFF_HAND   = { INVTYPE_WEAPONOFFHAND = true, INVTYPE_SHIELD = true, INVTYPE_HOLDABLE = true }
+local NOT_FOR_TWO_HANDERS = {
+    INVTYPE_WEAPONOFFHAND = true, INVTYPE_SHIELD = true, INVTYPE_HOLDABLE = true, -- off-hands
+    INVTYPE_WEAPON = true, INVTYPE_WEAPONMAINHAND = true,                         -- one-handers
+}
 
 local function UsingTwoHanderOnly()
     local mainHand = GetInventoryItemLink("player", 16)
@@ -192,15 +196,23 @@ local function Evaluate(questID, zoneHasLockedSA, settings)
     local gear = GetGear(questID)
     if gear and gear.isUsable and gear.itemLevel then
         local slots = ns.SLOTS[gear.equipLoc]
-        -- An off-hand isn't an upgrade if you wield a two-hander with an empty off-hand
-        if OFF_HAND[gear.equipLoc] and UsingTwoHanderOnly() then slots = nil end
+        -- Wielding a two-hander with an empty off-hand? Off-hands and one-handers aren't upgrades.
+        if NOT_FOR_TWO_HANDERS[gear.equipLoc] and UsingTwoHanderOnly() then slots = nil end
         if slots then
             local current = GetEquippedLevel(slots)
             local gain = gear.itemLevel - current
-            if gain >= settings.minUpgrade then
-                table.insert(reasons, { category = "gear",
+            -- Empty slot and you've said not to count those? Then it's not an upgrade.
+            local skipEmpty = (current == 0) and not settings.emptySlotUpgrades
+            if gain >= settings.minUpgrade and not skipEmpty then
+                local text
+                if current == 0 then
+                    -- Nothing equipped there: the biggest upgrade there is
+                    text = ("|cff00ff00Upgrade (empty slot)|r %s (ilvl %d)"):format(gear.name or "item", gear.itemLevel)
+                else
                     text = ("|cff00ff00Upgrade +%d|r %s (%d vs your %d)")
-                        :format(gain, gear.name or "item", gear.itemLevel, current) })
+                        :format(gain, gear.name or "item", gear.itemLevel, current)
+                end
+                table.insert(reasons, { category = "gear", text = text, gain = gain })
             end
         end
     end
@@ -357,9 +369,16 @@ local function BuildEntries(list)
         end
         table.sort(reasons, function(a, b) return (ranks[a.category] or 99) < (ranks[b.category] or 99) end)
         if choice == "no" then best = nil end -- hidden: not worth doing, sinks to the bottom
+
+        -- Size of the gear upgrade (if any), so bigger upgrades sort first
+        local gain = 0
+        for _, r in ipairs(reasons) do
+            if r.gain and r.gain > gain then gain = r.gain end
+        end
         table.insert(entries, { zoneID = q.zoneID, questID = q.questID, title = ns.GetTitle(q.questID),
                                 rank = best, reasons = reasons, summary = summary, gold = copper,
-                                isQuest = true, isSA = isSA, choice = choice, hidden = choice == "no" })
+                                isQuest = true, isSA = isSA, choice = choice, hidden = choice == "no",
+                                gain = gain })
     end
 
     local saOff = ns.IsCategoryOff(settings, "sa")
@@ -376,6 +395,7 @@ local function BuildEntries(list)
         if za ~= zb then return za < zb end
         local ra, rb = a.rank or 999, b.rank or 999
         if ra ~= rb then return ra < rb end
+        if (a.gain or 0) ~= (b.gain or 0) then return (a.gain or 0) > (b.gain or 0) end -- bigger upgrade first
         if a.gold ~= b.gold then return a.gold > b.gold end
         return a.title < b.title
     end)

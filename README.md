@@ -78,6 +78,9 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.5.5** One-handed weapons no longer count as upgrades for characters wielding a two-hander
+- **1.5.4** Setting to stop counting empty slots as gear upgrades (per character via separate settings)
+- **1.5.3** Gear upgrades sorted by size (empty slots first) and labelled "empty slot"
 - **1.5.2** Gold prices understood on event vendor lines
 - **1.5.1** Event items judged individually for "done today" (Coren's account-wide mount roll no longer greys out his per-character loot); account-wide completion only used for account-wide quests
 - **1.5.0** Event vendor lines show how many items you can afford and your tokens against the total cost
