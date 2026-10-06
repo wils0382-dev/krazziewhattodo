@@ -272,16 +272,46 @@ end
 ------------------------------------------------------------
 -- 5. COLLECT world quests
 ------------------------------------------------------------
+-- Map quests that aren't world quests: which kinds count as repeatable
+-- activities (weeklies etc.) rather than story quests.
+local QC = (Enum and Enum.QuestClassification) or {}
+local REPEATABLE_KINDS = {}
+for _, name in ipairs({ "Recurring", "Calling", "Meta", "Normal", "Threat" }) do
+    if QC[name] then REPEATABLE_KINDS[QC[name]] = true end
+end
+
+-- If this map quest is a repeatable activity, return a short label for it
+local function RepeatableLabel(questID)
+    if not (C_QuestInfoSystem and C_QuestInfoSystem.GetQuestClassification) then return nil end
+    local ok, class = pcall(C_QuestInfoSystem.GetQuestClassification, questID)
+    if not ok or not REPEATABLE_KINDS[class] then return nil end
+    local okTag, tag = pcall(C_QuestLog.GetQuestTagInfo, questID)
+    local tagName = okTag and tag and tag.tagName
+    if tagName == "Meta Quest" then return "Meta" end
+    return tagName or "Repeatable"
+end
+
 local function CollectWorldQuests()
+    local settings = ns.GetSettings()
     local found, seen = {}, {}
     for _, zoneID in ipairs(ns.ZONES) do
         for _, info in ipairs(C_TaskQuest.GetQuestsOnMap(zoneID) or {}) do
             local questID = info.questID or info.questId
             -- Skip quests you've already done (the map can lag a few seconds behind)
             local done = C_QuestLog.IsQuestFlaggedCompleted and C_QuestLog.IsQuestFlaggedCompleted(questID)
-            if questID and not seen[questID] and not done and C_QuestLog.IsWorldQuest(questID) then
-                seen[questID] = true
-                table.insert(found, { questID = questID, zoneID = info.mapID or zoneID })
+            if questID and not seen[questID] and not done then
+                if C_QuestLog.IsWorldQuest(questID) then
+                    seen[questID] = true
+                    -- Use the quest's OWN map, not the one we scanned (maps overlap)
+                    table.insert(found, { questID = questID, zoneID = info.mapID or zoneID })
+                elseif settings.showRepeatables and not C_QuestLog.GetLogIndexForQuestID(questID) then
+                    -- Repeatable quest you haven't picked up yet (in your log = "This week" instead)
+                    local label = RepeatableLabel(questID)
+                    if label then
+                        seen[questID] = true
+                        table.insert(found, { questID = questID, zoneID = info.mapID or zoneID, kind = label })
+                    end
+                end
             end
         end
     end
@@ -293,7 +323,9 @@ local function RequestRewards(list)
     for _, q in ipairs(list) do
         if HaveQuestRewardData and not HaveQuestRewardData(q.questID) then
             C_TaskQuest.RequestPreloadRewardData(q.questID)
-            missing = missing + 1
+            -- Only world quests are waited for: repeatable quests can report "not loaded"
+            -- forever while their rewards are actually readable
+            if not q.kind then missing = missing + 1 end
         end
     end
     return missing
@@ -362,7 +394,9 @@ local function BuildEntries(list)
 
     local entries = {}
     for _, q in ipairs(list) do
-        local reasons, summary, copper, isSA = Evaluate(q.questID, lockedZones[ns.COUNTS_AS[q.zoneID] or q.zoneID], settings)
+        -- Only world quests count towards unlocking a Special Assignment
+        local unlocks = (not q.kind) and lockedZones[ns.COUNTS_AS[q.zoneID] or q.zoneID]
+        local reasons, summary, copper, isSA = Evaluate(q.questID, unlocks, settings)
 
         -- Your own tick/cross for this quest on this character
         local choice = ns.GetChoice(q.questID)
@@ -390,7 +424,9 @@ local function BuildEntries(list)
         for _, r in ipairs(reasons) do
             if r.gain and r.gain > gain then gain = r.gain end
         end
-        table.insert(entries, { zoneID = q.zoneID, questID = q.questID, title = ns.GetTitle(q.questID),
+        local title = ns.GetTitle(q.questID)
+        if q.kind then title = "|cffb0b0ff[" .. q.kind .. "]|r " .. title end
+        table.insert(entries, { zoneID = q.zoneID, questID = q.questID, title = title,
                                 rank = best, reasons = reasons, summary = summary, gold = copper,
                                 isQuest = true, isSA = isSA, choice = choice, hidden = choice == "no",
                                 gain = gain })
@@ -477,7 +513,7 @@ function ns.SummaryText(r)
     if r.total == 0 and #r.entries == 0 then
         return "No world quests found. Open your world map, then Refresh."
     end
-    local text = ("%d of %d world quests worth doing. Special Assignments: %d ready, %d locked")
+    local text = ("%d of %d quests worth doing. Special Assignments: %d ready, %d locked")
         :format(r.worth, r.total, r.ready, r.locked)
     if (r.handIn or 0) > 0 then text = text .. (". |cff00ff00%d weekly to hand in|r"):format(r.handIn) end
     return text

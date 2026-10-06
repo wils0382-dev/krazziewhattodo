@@ -55,6 +55,8 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - ATT stores vendor prices as `{ {"i", itemID, amount} }` (item cost, e.g. Brewfest Prize Token 37829) or `{ {"c", currencyID, amount} }`. Gold prices are handled as a plain number or `{ {"g", copper} }`. ATT's prices can lag behind the game: if they disagree, the vendor is right.
 - Coren Direbrew's mount roll is a once-per-day-per-account quest (91894, "Special Loot Attempt (Daily Accountwide)"); his loot chest appearances are per character.
 - The in-game calendar's holiday IDs differ from ATT's (Brewfest: calendar 372, ATT 7), but the names match, so events are linked by name.
+- Repeatable quests (weeklies, Prey, raid/dungeon quests) appear in `C_TaskQuest.GetQuestsOnMap` alongside world quests, only when unlocked, and their rewards can be read before accepting them.
+- The calendar lists a holiday on its last day even after it ends; check `endTime`.
 - Silvermoon City world quests count towards Eversong Woods' unlock.
 - Zone map IDs: Eversong Woods 2395, Zul'Aman 2437, Harandar 2413, Voidstorm 2405, Silvermoon City 2393, The Coiled Isle 2512, Vaults of Atal'Utek 2509.
 
@@ -75,10 +77,12 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 - [ ] Profession dailies/weeklies based on the character's professions
 - [ ] Off-hand comparison for dual-wielders
 - [ ] Map events (e.g. Saltheril's Soiree, Void incursions)
-- [ ] Weekly activities (e.g. Saltheril's Soiree, Bountiful Delve gilded rewards, other weeklies)
+- [x] Repeatable/weekly quests on the map, judged by your rules
+- [ ] Other weekly activities (e.g. Saltheril's Soiree, Bountiful Delve gilded rewards)
 
 ## Version history
 
+- **1.6.0** Repeatable quests on the map (weeklies, raid/dungeon quests, Prey...) judged like world quests; events disappear when they end; Timewalking shows only the running expansion plus a total
 - **1.5.6** `/kwtd weekly` detective for recurring quests this character can see
 - **1.5.5** One-handed weapons no longer count as upgrades for characters wielding a two-hander
 - **1.5.4** Setting to stop counting empty slots as gear upgrades (per character via separate settings)

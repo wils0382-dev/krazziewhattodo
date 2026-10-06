@@ -238,21 +238,51 @@ local function GroupByActivity(missing, eventName)
     return list
 end
 
--- Holidays running today, from the in-game calendar
+-- A calendar time as one comparable number, e.g. 202610071030
+local function Stamp(t)
+    return (((t.year * 100 + t.month) * 100 + t.monthDay) * 100 + (t.hour or 0)) * 100 + (t.minute or 0)
+end
+
+-- A holiday's description (it often names the expansion, e.g. for Timewalking)
+local function HolidayDescription(day, index)
+    if not C_Calendar.GetHolidayInfo then return "" end
+    local ok, a, b = pcall(C_Calendar.GetHolidayInfo, 0, day, index)
+    if not ok then return "" end
+    if type(a) == "table" then return a.description or "" end
+    return b or "" -- older style: name, description, ...
+end
+
+-- Holidays running RIGHT NOW (started, and not yet ended), from the in-game calendar
 local function ActiveHolidays()
-    local names = {}
-    if not (C_Calendar and C_Calendar.GetNumDayEvents and C_DateAndTime) then return names end
+    local list = {}
+    if not (C_Calendar and C_Calendar.GetNumDayEvents and C_DateAndTime) then return list end
     if CalendarFrame and CalendarFrame:IsShown() then return nil end -- don't move your calendar view
     local now = C_DateAndTime.GetCurrentCalendarTime()
+    local nowStamp = Stamp(now)
     pcall(C_Calendar.SetAbsMonth, now.month, now.year)
     local ok, count = pcall(C_Calendar.GetNumDayEvents, 0, now.monthDay)
     for i = 1, (ok and count or 0) do
         local ok2, ev = pcall(C_Calendar.GetDayEvent, 0, now.monthDay, i)
         if ok2 and ev and ev.calendarType == "HOLIDAY" and ev.title then
-            table.insert(names, ev.title)
+            local started = not ev.startTime or Stamp(ev.startTime) <= nowStamp
+            local notEnded = not ev.endTime or Stamp(ev.endTime) > nowStamp
+            if started and notEnded then
+                table.insert(list, { title = ev.title, description = HolidayDescription(now.monthDay, i) })
+            end
         end
     end
-    return names
+    return list
+end
+
+-- Expansion names, for events split by expansion (Timewalking)
+local EXPANSIONS = { "burning crusade", "wrath of the lich king", "cataclysm", "mists of pandaria",
+                     "warlords of draenor", "legion", "battle for azeroth", "shadowlands",
+                     "dragonflight", "the war within" }
+local function ExpansionIn(text)
+    text = (text or ""):lower()
+    for _, e in ipairs(EXPANSIONS) do
+        if text:find(e, 1, true) then return e end
+    end
 end
 
 ------------------------------------------------------------
@@ -274,11 +304,16 @@ function Events:GetActive(settings)
 
     local events = {}
     for _, holiday in ipairs(holidays) do
-        local event = FindEvent(att, holiday)
+        local event = FindEvent(att, holiday.title)
         if event then
             local missing = CollectMissing(event)
             if #missing > 0 then
-                table.insert(events, { name = holiday, activities = GroupByActivity(missing, holiday) })
+                table.insert(events, {
+                    name = holiday.title,
+                    -- Which expansion is running (Timewalking): title first, then description
+                    running = ExpansionIn(holiday.title) or ExpansionIn(holiday.description),
+                    activities = GroupByActivity(missing, holiday.title),
+                })
             end
         end
     end
@@ -357,10 +392,22 @@ function Events:Describe(activity, settings)
     return text, bestRank, done
 end
 
--- Lines for one event, sorted: not done first, then best type, then name
+-- Lines for one event, sorted: not done first, then best type, then name.
+-- Events split by expansion (Timewalking) show only the running expansion,
+-- plus one total line across every expansion.
 function Events:Lines(event, settings)
-    local rows = {}
+    local shown, splitByExpansion = {}, false
     for _, a in ipairs(event.activities) do
+        local expansion = ExpansionIn(a.label)
+        if expansion then splitByExpansion = true end
+        -- Hide other expansions' lines, but only if we know which one is running
+        if not (event.running and expansion and expansion ~= event.running) then
+            table.insert(shown, a)
+        end
+    end
+
+    local rows = {}
+    for _, a in ipairs(shown) do
         local text, rank, done = self:Describe(a, settings)
         if text then table.insert(rows, { text = text, rank = rank, done = done, label = a.label }) end
     end
@@ -371,6 +418,18 @@ function Events:Lines(event, settings)
     end)
     local lines = {}
     for _, r in ipairs(rows) do table.insert(lines, r.text) end
+
+    -- Total across every expansion (only when we've hidden some)
+    if splitByExpansion and event.running and #shown < #event.activities then
+        local total = { label = "All expansions (total)", items = {}, quests = {} }
+        for _, a in ipairs(event.activities) do
+            if ExpansionIn(a.label) then
+                for _, m in ipairs(a.items) do table.insert(total.items, m) end
+            end
+        end
+        local text = self:Describe(total, settings)
+        if text then table.insert(lines, "|cffaaaaaa" .. text .. "|r") end
+    end
     return lines
 end
 
@@ -399,6 +458,11 @@ function Events:Missing(eventName)
 
     KrazzieDB = KrazzieDB or {}
     KrazzieDB.debug = { ("%s: %d missing, %d entries checked"):format(title, #missing, checked) }
+    -- What the calendar says is running now (to check expansion detection)
+    for _, h in ipairs(ActiveHolidays() or {}) do
+        table.insert(KrazzieDB.debug, ("Running now: %s | desc: %s | expansion: %s")
+            :format(h.title, h.description, tostring(ExpansionIn(h.title) or ExpansionIn(h.description))))
+    end
     for _, m in ipairs(missing) do
         table.insert(KrazzieDB.debug, ("%s | %s | %s | quest=%s | cost=%s")
             :format(m.type, m.name, m.source, tostring(m.quest), Serialize(m.cost)))

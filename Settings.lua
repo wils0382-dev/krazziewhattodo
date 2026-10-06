@@ -42,6 +42,7 @@ ns.DEFAULTS = {
     focusCurrentZone = false, -- expand only the zone you're in, collapse the rest
     showMinimap      = true,  -- show the minimap button
     showWeeklies     = true,  -- show weekly quests from your quest log at the top
+    showRepeatables  = true,  -- include repeatable quests on the map (weeklies, raid/dungeon quests...)
     respectCaps      = true,  -- stop chasing currencies you've capped this week (or are full on)
     emptySlotUpgrades = true, -- gear for a slot with nothing equipped counts as an upgrade
 
