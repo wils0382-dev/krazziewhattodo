@@ -51,7 +51,8 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - Once unlocked, the marker disappears and it becomes a world quest with tag ID `286` ("Capstone World Quest").
 - Some quest-reward "currencies" are really reputation; `C_CurrencyInfo.GetFactionGrantedByCurrency` tells them apart.
 - All The Things (5.3.x): main table `ATTC`. Holidays are under headerID -36, World Events under -734. Objects have `collectible`, `collected`, `u` (unobtainable) and a `parent` chain showing the source (e.g. Brewfest > Coren Direbrew > loot bag > daily quest > mount).
-- ATT stores vendor prices as `{ {"i", itemID, amount} }` (item cost, e.g. Brewfest Prize Token 37829) or `{ {"c", currencyID, amount} }`.
+- ATT stores vendor prices as `{ {"i", itemID, amount} }` (item cost, e.g. Brewfest Prize Token 37829) or `{ {"c", currencyID, amount} }`. Gold prices are handled as a plain number or `{ {"g", copper} }`. ATT's prices can lag behind the game: if they disagree, the vendor is right.
+- Coren Direbrew's mount roll is a once-per-day-per-account quest (91894, "Special Loot Attempt (Daily Accountwide)"); his loot chest appearances are per character.
 - The in-game calendar's holiday IDs differ from ATT's (Brewfest: calendar 372, ATT 7), but the names match, so events are linked by name.
 - Silvermoon City world quests count towards Eversong Woods' unlock.
 - Zone map IDs: Eversong Woods 2395, Zul'Aman 2437, Harandar 2413, Voidstorm 2405, Silvermoon City 2393, The Coiled Isle 2512, Vaults of Atal'Utek 2509.
@@ -77,6 +78,8 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.5.2** Gold prices understood on event vendor lines
+- **1.5.1** Event items judged individually for "done today" (Coren's account-wide mount roll no longer greys out his per-character loot); account-wide completion only used for account-wide quests
 - **1.5.0** Event vendor lines show how many items you can afford and your tokens against the total cost
 - **1.4.0** Window sections (weekly, world quests, events) can be reordered in Settings; weekly and event sections collapse like zones
 - **1.3.0** Running holidays appear in the window, one line per activity, using All The Things; per-type switches; duplicate and name fixes

@@ -87,8 +87,29 @@ end
 ------------------------------------------------------------
 -- Costs. ATT writes a price as { {"i", itemID, amount} } or { {"c", currencyID, amount} }
 ------------------------------------------------------------
+-- ATT prices come in a few shapes. Turn them all into a list of { kind, id, amount }:
+--   { {"i", itemID, n} }  item cost        { {"c", currencyID, n} }  currency cost
+--   a plain number, or { {"g", copper} }   gold cost (in copper)
+local function CostParts(cost)
+    if type(cost) == "number" then return { { "g", 0, cost } } end
+    if type(cost) ~= "table" then return {} end
+    local parts = {}
+    for _, part in ipairs(cost) do
+        if type(part) == "table" then
+            if part[1] == "g" then
+                table.insert(parts, { "g", 0, part[3] or part[2] or 0 })
+            else
+                table.insert(parts, { part[1], part[2], part[3] or 1 })
+            end
+        end
+    end
+    return parts
+end
+
 local function HeldAmount(kind, id)
-    if kind == "i" then
+    if kind == "g" then
+        return GetMoney() -- in copper
+    elseif kind == "i" then
         -- bags, bank, reagent bank and warband bank
         local ok, count = pcall(C_Item.GetItemCount, id, true, false, true, true)
         return (ok and count) or 0
@@ -100,7 +121,9 @@ local function HeldAmount(kind, id)
 end
 
 local function CostName(kind, id)
-    if kind == "i" then
+    if kind == "g" then
+        return "gold"
+    elseif kind == "i" then
         local name = C_Item.GetItemNameByID(id)
         if not name then C_Item.RequestLoadItemDataByID(id) end
         return name or ("item " .. id)
@@ -111,9 +134,9 @@ local function CostName(kind, id)
     return tostring(kind) .. " " .. tostring(id)
 end
 
-local function CanAfford(cost)
-    for _, part in ipairs(cost) do
-        if type(part) == "table" and HeldAmount(part[1], part[2]) < (part[3] or 1) then return false end
+local function CanAfford(parts)
+    for _, part in ipairs(parts) do
+        if HeldAmount(part[1], part[2]) < part[3] then return false end
     end
     return true
 end
@@ -124,9 +147,20 @@ local function Comma(n)
     return tostring(n)
 end
 
+-- Amount as text: gold shown in whole gold ("1,250g"), everything else as a number
+local function AmountText(kind, amount)
+    if kind == "g" then return Comma(math.floor(amount / 10000)) .. "g" end
+    return Comma(amount)
+end
+
+-- Done by this character - or, for account-wide quests only, by any character
 local function IsQuestDone(questID)
     if C_QuestLog.IsQuestFlaggedCompleted and C_QuestLog.IsQuestFlaggedCompleted(questID) then return true end
-    if C_QuestLog.IsQuestFlaggedCompletedOnAccount and C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID) then return true end
+    local accountWide = C_QuestLog.IsAccountQuest and C_QuestLog.IsAccountQuest(questID)
+    if accountWide and C_QuestLog.IsQuestFlaggedCompletedOnAccount
+       and C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID) then
+        return true
+    end
     return false
 end
 
@@ -258,38 +292,48 @@ function Events:Describe(activity, settings)
     local off = settings.eventTypesOff or {}
 
     -- Count the types you care about, and add up prices for the ones with a cost
-    local counts = {}
+    -- Each item is judged on its own quest: done today = its quest is complete
+    local counts, doneCounts, available, doneToday = {}, {}, 0, 0
     local totals, totalOrder = {}, {}
     local priced, affordable = 0, 0
     for _, m in ipairs(activity.items) do
-        if not off[m.type] then
+        local itemDone = m.quest and IsQuestDone(m.quest)
+        if not off[m.type] and itemDone then
+            doneToday = doneToday + 1
+            doneCounts[m.type] = (doneCounts[m.type] or 0) + 1
+        elseif not off[m.type] then
+            available = available + 1
             counts[m.type] = (counts[m.type] or 0) + 1
-            if type(m.cost) == "table" and #m.cost > 0 then
+            local costParts = CostParts(m.cost)
+            if #costParts > 0 then
                 priced = priced + 1
-                if CanAfford(m.cost) then affordable = affordable + 1 end
-                for _, part in ipairs(m.cost) do
-                    if type(part) == "table" then
-                        local key = tostring(part[1]) .. ":" .. tostring(part[2])
-                        if not totals[key] then
-                            totals[key] = { kind = part[1], id = part[2], amount = 0 }
-                            table.insert(totalOrder, key)
-                        end
-                        totals[key].amount = totals[key].amount + (part[3] or 1)
+                if CanAfford(costParts) then affordable = affordable + 1 end
+                for _, part in ipairs(costParts) do
+                    local key = tostring(part[1]) .. ":" .. tostring(part[2])
+                    if not totals[key] then
+                        totals[key] = { kind = part[1], id = part[2], amount = 0 }
+                        table.insert(totalOrder, key)
                     end
+                    totals[key].amount = totals[key].amount + part[3]
                 end
             end
         end
     end
 
+    if available == 0 and doneToday == 0 then return nil end -- nothing you want here
+
+    -- Everything done today: describe what was done, greyed
+    local done = (available == 0)
+    local shown = done and doneCounts or counts
+
     local parts, bestRank = {}, nil
     for _, t in ipairs(TYPE_ORDER) do
-        local n = counts[t]
+        local n = shown[t]
         if n and n > 0 then
             table.insert(parts, n .. " " .. t)
             bestRank = bestRank or TYPE_RANK[t]
         end
     end
-    if #parts == 0 then return nil end
 
     -- e.g. " · 3 affordable now (320/4,925 Brewfest Prize Token)"
     local costText = ""
@@ -297,22 +341,19 @@ function Events:Describe(activity, settings)
         local held = {}
         for _, key in ipairs(totalOrder) do
             local t = totals[key]
-            table.insert(held, ("%s/%s %s"):format(Comma(HeldAmount(t.kind, t.id)), Comma(t.amount), CostName(t.kind, t.id)))
+            table.insert(held, ("%s/%s %s"):format(AmountText(t.kind, HeldAmount(t.kind, t.id)),
+                AmountText(t.kind, t.amount), CostName(t.kind, t.id)))
         end
         costText = (" %s|cff%s%d affordable now|r |cffaaaaaa(%s)|r"):format("\194\183 ",
             affordable > 0 and "00ff00" or "aaaaaa", affordable, table.concat(held, ", "))
     end
 
-    -- Done today = it has quests above it, and they're all complete
-    local hasQuest, allDone = false, true
-    for questID in pairs(activity.quests) do
-        hasQuest = true
-        if not IsQuestDone(questID) then allDone = false end
-    end
-    local done = hasQuest and allDone
-
     local text = activity.label .. " - " .. table.concat(parts, ", ") .. costText
-    if done then text = "|cff888888" .. text .. " (done today)|r" end
+    if done then
+        text = "|cff888888" .. text .. " (done today)|r"
+    elseif doneToday > 0 then
+        text = text .. (" |cff888888(+%d done today)|r"):format(doneToday)
+    end
     return text, bestRank, done
 end
 
