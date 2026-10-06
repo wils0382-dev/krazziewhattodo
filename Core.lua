@@ -4,6 +4,8 @@
 -- /kwtd chat      = print the worth-doing list to chat
 -- /kwtd chat all  = print everything to chat, skipped quests greyed out
 -- /kwtd debug     = hidden labels for the zone you're in (saved to file)
+-- /kwtd caps      = every known currency and its weekly/total limits
+-- /kwtd att       = what All The Things exposes to other addons (saved to file)
 
 local _, ns = ...
 
@@ -86,6 +88,10 @@ SlashCmdList.KRAZZIEWTD = function(msg)
     msg = (msg or ""):lower()
     if msg:find("debug") then
         ns.DebugZone()
+    elseif msg == "caps" then
+        ns.DebugCaps()
+    elseif msg == "att" then
+        ns.DebugATT()
     elseif msg:find("chat") then
         local showAll = msg:find("all") ~= nil
         ns.Scan(function(result) PrintToChat(result, showAll) end)

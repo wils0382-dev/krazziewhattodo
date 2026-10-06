@@ -99,6 +99,27 @@ function ns.LearnCurrency(currencyID, name)
     end
 end
 
+-- Has this currency hit a limit? Returns "weekly", "full", or nil.
+--   weekly = earned the most allowed this week
+--   full   = holding (or have earned) the most allowed in total
+function ns.CurrencyCap(currencyID)
+    if not (C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo) then return nil end
+    local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, currencyID)
+    if not ok or not info then return nil end
+
+    local weeklyMax = info.maxWeeklyQuantity or 0
+    if weeklyMax > 0 and (info.quantityEarnedThisWeek or 0) >= weeklyMax then
+        return "weekly"
+    end
+
+    local max = info.maxQuantity or 0
+    if max > 0 then
+        local held = info.useTotalEarnedForMaxQty and (info.totalEarned or 0) or (info.quantity or 0)
+        if held >= max then return "full" end
+    end
+    return nil
+end
+
 -- Is a category switched off? Currencies ("cur:1234") are off unless ticked.
 function ns.IsCategoryOff(settings, category)
     local value = settings.off and settings.off[category]

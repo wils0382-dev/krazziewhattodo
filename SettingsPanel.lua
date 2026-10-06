@@ -7,7 +7,7 @@ ns.SettingsPanel = Panel
 
 local WIDTH, PAD, ROW = 300, 12, 22
 local PRIORITY_TOP = 192   -- where the priority list starts
-local LOWER_HEIGHT = 194   -- height of the "On login" + "Window" sections
+local LOWER_HEIGHT = 218   -- height of the "On login" + "Window" sections
 
 local LABELS = {
     pick    = "Your picks (ticked quests)",
@@ -20,7 +20,7 @@ local LABELS = {
 }
 
 local panel, prioFrame, lower
-local ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox, minimapBox, weeklyBox
+local ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox, minimapBox, weeklyBox, capsBox
 local rows = {}
 
 -- Friendly name for a category, including learned currencies
@@ -204,6 +204,10 @@ local function Create(parent)
         ns.SetSetting("showWeeklies", on and true or false)
         Changed()
     end)
+    capsBox = TickBox(lower, "Stop chasing capped currencies", -4, -194, function(on)
+        ns.SetSetting("respectCaps", on and true or false)
+        Changed()
+    end)
 
     -- Reset
     local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
@@ -244,7 +248,10 @@ function Panel:Update()
         row:SetPoint("TOPLEFT", prioFrame, "TOPLEFT", 0, -(i - 1) * ROW)
         row.box:SetChecked(isOn)
         row.box:SetScript("OnClick", function(self) SetCategoryOn(category, self:GetChecked()) end)
-        row.text:SetText(i .. ". " .. ns.CategoryLabel(category))
+        local capNote = ""
+        local currencyID = tonumber(category:match("^cur:(%d+)$"))
+        if currencyID and ns.CurrencyCap(currencyID) then capNote = "  |cffff6666(capped)|r" end
+        row.text:SetText(i .. ". " .. ns.CategoryLabel(category) .. capNote)
         row.text:SetTextColor(isOn and 1 or 0.5, isOn and 1 or 0.5, isOn and 1 or 0.5) -- grey when off
         row.up:SetEnabled(i > 1)
         row.down:SetEnabled(i < count)
@@ -261,6 +268,7 @@ function Panel:Update()
     focusBox:SetChecked(s.focusCurrentZone)
     minimapBox:SetChecked(s.showMinimap)
     weeklyBox:SetChecked(s.showWeeklies)
+    capsBox:SetChecked(s.respectCaps)
 end
 
 ------------------------------------------------------------

@@ -19,6 +19,8 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `/kwtd` | Open or close the window |
 | `/kwtd chat` | Print the worth-doing list to chat |
 | `/kwtd chat all` | Print everything to chat, skipped quests greyed out |
+| `/kwtd caps` | Every known currency with its weekly and total limits |
+| `/kwtd att` | Record what All The Things exposes to other addons (to the save file) |
 | `/kwtd debug` | Record hidden quest and map-marker labels for the current zone to the save file |
 
 ## Files
@@ -50,6 +52,8 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Roadmap
 
+See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farming focus).
+
 - [x] Window comfort: stays open with the map, resizing, collapsible zones (focus on current zone)
 - [x] Titan Panel / minimap icon (LibDataBroker, borrowed from Routine/Titan)
 - [x] Quests tick themselves off when handed in
@@ -67,6 +71,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 
 ## Version history
 
+- **1.1.0** Capped currencies stop counting; `/kwtd caps` and `/kwtd att` detective commands
 - **1.0.0** World quest planner complete: rules, Special Assignments, priorities, per-character choices and settings, weeklies, alts, Titan Panel
 - **0.15.0** "This week" section for weekly quests in your log; Alts panel with next-up suggestion; alts in the Titan tooltip
 - **0.14.2** Off-hand rewards no longer count as upgrades for characters wielding a two-hander

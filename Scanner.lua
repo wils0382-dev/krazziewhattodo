@@ -223,8 +223,13 @@ local function Evaluate(questID, zoneHasLockedSA, settings)
                 text = ("|cff00ff96+%d %s rep|r"):format(c.amount, c.name or "faction") })
         else
             ns.LearnCurrency(c.id, c.name)
-            table.insert(reasons, { category = "cur:" .. c.id,
-                text = ("|cff40c0ff%d %s|r"):format(c.amount, c.name or "currency") })
+            c.capped = ns.CurrencyCap(c.id)
+            -- Capped currencies don't count (unless you've switched that off)
+            if not (c.capped and settings.respectCaps) then
+                table.insert(reasons, { category = "cur:" .. c.id,
+                    text = ("|cff40c0ff%d %s|r%s"):format(c.amount, c.name or "currency",
+                        c.capped and " |cffff6666(capped)|r" or "") })
+            end
         end
     end
 
@@ -244,7 +249,8 @@ local function Evaluate(questID, zoneHasLockedSA, settings)
     if copper > 0 then table.insert(summary, GetCoinTextureString(copper)) end
     if gear then table.insert(summary, ("%s (ilvl %s)"):format(gear.name or "item", gear.itemLevel or "?")) end
     for _, c in ipairs(currencies) do
-        table.insert(summary, (c.isRep and "+%d %s rep" or "%d %s"):format(c.amount, c.name or "currency"))
+        table.insert(summary, (c.isRep and "+%d %s rep" or "%d %s"):format(c.amount, c.name or "currency")
+            .. (c.capped and " (capped)" or ""))
     end
     if #summary == 0 then table.insert(summary, "other reward") end
 
