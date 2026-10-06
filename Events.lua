@@ -277,7 +277,8 @@ end
 -- Expansion names, for events split by expansion (Timewalking)
 local EXPANSIONS = { "burning crusade", "wrath of the lich king", "cataclysm", "mists of pandaria",
                      "warlords of draenor", "legion", "battle for azeroth", "shadowlands",
-                     "dragonflight", "the war within" }
+                     "dragonflight", "the war within",
+                     "classic" } -- last, so a more specific expansion name wins if both appear
 local function ExpansionIn(text)
     text = (text or ""):lower()
     for _, e in ipairs(EXPANSIONS) do

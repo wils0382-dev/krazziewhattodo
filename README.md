@@ -82,6 +82,7 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.6.1** Classic recognised as a Timewalking expansion
 - **1.6.0** Repeatable quests on the map (weeklies, raid/dungeon quests, Prey...) judged like world quests; events disappear when they end; Timewalking shows only the running expansion plus a total
 - **1.5.6** `/kwtd weekly` detective for recurring quests this character can see
 - **1.5.5** One-handed weapons no longer count as upgrades for characters wielding a two-hander

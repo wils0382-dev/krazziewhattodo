@@ -79,6 +79,13 @@ First step: a debug command to discover what ATT exposes in its current version,
 - **Fix in Krazzie:** when an event activity is a vendor NPC, also ask ATT for every other place that NPC appears (`SearchForField("npcID", id)`) and include missing items from those too, deduplicated.
 - **Testing:** needs a live example. The two Brewfest decor items were bought, so they're collected now. Try with Hallow's End or another holiday's vendors.
 
+## Idea: settings redesign (filed for later)
+
+The settings panel keeps getting longer. Plan:
+
+- **Tabs** instead of one long page, e.g. **Rules** (thresholds, empty slots, caps), **Rewards** (priority list, currencies, rep), **Events** (event goals, item types) and **Window** (sections, login, Esc, focus, minimap).
+- **Per-event switches:** a list of every event Krazzie has seen (Timewalking, Darkmoon Faire, Brewfest...), each with its own tick box. Combined with "Separate settings for this character", an alt can switch off Timewalking entirely while the main keeps it.
+
 ## Suggested build order
 
 1. ~~**Weekly caps**: stop chasing capped currencies.~~ Built in 1.1.0.
