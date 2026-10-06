@@ -7,7 +7,7 @@ ns.SettingsPanel = Panel
 
 local WIDTH, PAD, ROW = 300, 12, 22
 local PRIORITY_TOP = 192   -- where the priority list starts
-local LOWER_HEIGHT = 218   -- height of the "On login" + "Window" sections
+local LOWER_HEIGHT = 396   -- height of the "On login" + "Window" sections
 
 local LABELS = {
     pick    = "Your picks (ticked quests)",
@@ -22,6 +22,8 @@ local LABELS = {
 local panel, prioFrame, lower
 local ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox, minimapBox, weeklyBox, capsBox
 local rows = {}
+local eventsBox
+local typeBoxes = {}
 
 -- Friendly name for a category, including learned currencies
 function ns.CategoryLabel(category)
@@ -209,6 +211,24 @@ local function Create(parent)
         Changed()
     end)
 
+    -- Event goals (needs All The Things)
+    Label(lower, "Event goals (needs All The Things)", 0, -228, "GameFontNormal")
+    eventsBox = TickBox(lower, "Show running events", -4, -248, function(on)
+        ns.SetSetting("showEvents", on and true or false)
+        Changed()
+    end)
+    -- One tick box per type, in two columns
+    for i, typeName in ipairs(ns.EVENT_TYPES) do
+        local column = (i - 1) % 2
+        local rowNumber = math.floor((i - 1) / 2)
+        typeBoxes[typeName] = TickBox(lower, typeName, -4 + column * 135, -272 - rowNumber * 24, function(on)
+            local off = ns.GetSettings().eventTypesOff or {}
+            off[typeName] = (not on) or nil
+            ns.SetSetting("eventTypesOff", off)
+            Changed()
+        end)
+    end
+
     -- Reset
     local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     reset:SetSize(130, 22)
@@ -269,6 +289,10 @@ function Panel:Update()
     minimapBox:SetChecked(s.showMinimap)
     weeklyBox:SetChecked(s.showWeeklies)
     capsBox:SetChecked(s.respectCaps)
+    eventsBox:SetChecked(s.showEvents)
+    for typeName, box in pairs(typeBoxes) do
+        box:SetChecked(not (s.eventTypesOff and s.eventTypesOff[typeName]))
+    end
 end
 
 ------------------------------------------------------------

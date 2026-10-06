@@ -300,6 +300,16 @@ function Window:Render(result, keepScroll)
         y = y + 8
     end
 
+    -- Running events (from All The Things): one line per activity
+    for _, event in ipairs(result.events or {}) do
+        local eventLines = ns.Events:Lines(event, result.settings)
+        if #eventLines > 0 then
+            Add(event.name .. "  |cffaaaaaa(event)|r", 0, "GameFontNormal")
+            for _, text in ipairs(eventLines) do Add(text, 16) end
+            y = y + 8
+        end
+    end
+
     -- Group the visible entries by zone, keeping the sorted order
     local zones, byZone = {}, {}
     for _, e in ipairs(result.entries) do

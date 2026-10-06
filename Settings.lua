@@ -36,6 +36,10 @@ ns.DEFAULTS = {
     showMinimap      = true,  -- show the minimap button
     showWeeklies     = true,  -- show weekly quests from your quest log at the top
     respectCaps      = true,  -- stop chasing currencies you've capped this week (or are full on)
+
+    -- Event goals (needs All The Things)
+    showEvents    = true, -- show running holidays and what you're missing from them
+    eventTypesOff = {},   -- types you don't care about, e.g. { Appearance = true }
 }
 
 ------------------------------------------------------------

@@ -15,6 +15,11 @@ local function PrintToChat(result, showAll)
     for _, w in ipairs(result.weeklies or {}) do
         print("  |cffffd100This week:|r " .. ns.FormatWeekly(w))
     end
+    for _, event in ipairs(result.events or {}) do
+        for _, text in ipairs(ns.Events:Lines(event, result.settings)) do
+            print("  |cffffd100" .. event.name .. ":|r " .. text)
+        end
+    end
     local lastZone
     for _, e in ipairs(result.entries) do
         if e.rank or showAll then
@@ -53,9 +58,20 @@ local watcher = CreateFrame("Frame")
 watcher:RegisterEvent("QUEST_TURNED_IN")   -- you handed in a quest
 watcher:RegisterEvent("AREA_POIS_UPDATED") -- map markers changed (SA unlocked, etc.)
 watcher:RegisterEvent("QUEST_ACCEPTED")    -- picked up a quest (e.g. a new weekly)
--- Some world quests complete without a hand-in; register this one safely
-pcall(watcher.RegisterEvent, watcher, "WORLD_QUEST_COMPLETED_BY_SPELL")
-watcher:SetScript("OnEvent", function() RefreshSoon() end)
+-- These are registered "safely": if the game renames one, nothing breaks
+for _, event in ipairs({
+    "WORLD_QUEST_COMPLETED_BY_SPELL",   -- world quest finished without a hand-in
+    "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_TOY_ADDED",
+    "TRANSMOG_COLLECTION_SOURCE_ADDED", "ACHIEVEMENT_EARNED",
+    "CALENDAR_UPDATE_EVENT_LIST",       -- the calendar has loaded today's holidays
+}) do
+    pcall(watcher.RegisterEvent, watcher, event)
+end
+watcher:SetScript("OnEvent", function(_, event)
+    -- Anything except map-marker changes might change what events you're missing
+    if event ~= "AREA_POIS_UPDATED" then ns.Events:Invalidate() end
+    RefreshSoon()
+end)
 
 ------------------------------------------------------------
 -- LOGIN, /reload and loading screens
@@ -71,6 +87,7 @@ events:SetScript("OnEvent", function(_, _, isInitialLogin, isReloadingUi)
     if not brokerReady then
         ns.Broker:Init()
         brokerReady = true
+        if C_Calendar and C_Calendar.OpenCalendar then pcall(C_Calendar.OpenCalendar) end -- load holidays
     end
     C_Timer.After(5, function()
         local settings = ns.GetSettings()

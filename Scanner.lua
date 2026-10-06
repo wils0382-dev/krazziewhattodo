@@ -390,8 +390,10 @@ local function BuildEntries(list)
     local handIn = 0
     for _, w in ipairs(weeklies) do if w.ready then handIn = handIn + 1 end end
 
+    local events = ns.Events and ns.Events:GetActive(settings) or {}
+
     return { entries = entries, total = #list, worth = worth, ready = ready, locked = lockedCount,
-             weeklies = weeklies, handIn = handIn }
+             weeklies = weeklies, handIn = handIn, events = events, settings = settings }
 end
 
 ------------------------------------------------------------
