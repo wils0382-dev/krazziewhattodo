@@ -76,5 +76,5 @@ First step: a debug command to discover what ATT exposes in its current version,
 1. ~~**Weekly caps**: stop chasing capped currencies.~~ Built in 1.1.0.
 2. **Collectible rewards on world quests**: new categories (Mount, Pet, Toy, Appearance, Decor), auto-hidden once collected.
 3. **Focus**: the goal-type priority list and presets.
-4. **ATT detective step**: find out what ATT exposes and how to query it.
+4. ~~**ATT detective step**~~ Done: ATT exposes `ATTC`, with Holidays (-36) and World Event (-734) sections, collected flags and source chains. `/kwtd event <name>` built in 1.2.0.
 5. **Weeklies and events linked to goals**: using ATT where available, a hand-built list where not.

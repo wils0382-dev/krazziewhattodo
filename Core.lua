@@ -7,6 +7,7 @@
 -- /kwtd caps      = every known currency and its weekly/total limits
 -- /kwtd att       = what All The Things exposes to other addons (saved to file)
 -- /kwtd att2      = ATT's database layout and test searches (saved to file)
+-- /kwtd event X   = what you're missing from event X, e.g. /kwtd event brewfest (needs ATT)
 
 local _, ns = ...
 
@@ -95,6 +96,8 @@ SlashCmdList.KRAZZIEWTD = function(msg)
         ns.DebugATT()
     elseif msg == "att2" then
         ns.DebugATT2()
+    elseif msg:find("^event") then
+        ns.Events:Missing(msg:match("^event%s+(.+)$"))
     elseif msg:find("chat") then
         local showAll = msg:find("all") ~= nil
         ns.Scan(function(result) PrintToChat(result, showAll) end)

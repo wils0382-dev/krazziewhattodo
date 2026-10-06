@@ -21,6 +21,8 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `/kwtd chat all` | Print everything to chat, skipped quests greyed out |
 | `/kwtd caps` | Every known currency with its weekly and total limits |
 | `/kwtd att` | Record what All The Things exposes to other addons (to the save file) |
+| `/kwtd att2` | Record ATT's database layout and test searches (to the save file) |
+| `/kwtd event <name>` | What you're still missing from an event, e.g. `/kwtd event brewfest` (needs All The Things) |
 | `/kwtd debug` | Record hidden quest and map-marker labels for the current zone to the save file |
 
 ## Files
@@ -36,6 +38,7 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `Window.lua` | The main window |
 | `SettingsPanel.lua` | The settings panel beside the window |
 | `Alts.lua` | Per-character snapshots and the Alts panel |
+| `Events.lua` | Event goals, read from All The Things |
 | `Broker.lua` | Titan Panel and minimap icon |
 | `Core.lua` | Start-up, auto-refresh and slash commands |
 
@@ -47,6 +50,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - A locked Special Assignment's tooltip counts down ("Complete 1 world quest in Eversong to unlock").
 - Once unlocked, the marker disappears and it becomes a world quest with tag ID `286` ("Capstone World Quest").
 - Some quest-reward "currencies" are really reputation; `C_CurrencyInfo.GetFactionGrantedByCurrency` tells them apart.
+- All The Things (5.3.x): main table `ATTC`. Holidays are under headerID -36, World Events under -734. Objects have `collectible`, `collected`, `u` (unobtainable) and a `parent` chain showing the source (e.g. Brewfest > Coren Direbrew > loot bag > daily quest > mount).
 - Silvermoon City world quests count towards Eversong Woods' unlock.
 - Zone map IDs: Eversong Woods 2395, Zul'Aman 2437, Harandar 2413, Voidstorm 2405, Silvermoon City 2393, The Coiled Isle 2512, Vaults of Atal'Utek 2509.
 
@@ -71,6 +75,8 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.2.0** `/kwtd event <name>`: missing collectibles from an event via All The Things
+- **1.1.1** `/kwtd att2` deeper ATT detective
 - **1.1.0** Capped currencies stop counting; `/kwtd caps` and `/kwtd att` detective commands
 - **1.0.0** World quest planner complete: rules, Special Assignments, priorities, per-character choices and settings, weeklies, alts, Titan Panel
 - **0.15.0** "This week" section for weekly quests in your log; Alts panel with next-up suggestion; alts in the Titan tooltip
