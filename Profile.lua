@@ -163,5 +163,17 @@ function ns.GetSettings()
     local char = ns.GetCharDB()
     if char.useOwn and char.settings then Layer(char.settings) end
     result.priority = CleanPriority(result.priority)
+
+    -- Section order: keep known sections, add any missing ones at the end
+    local sections, seen = {}, {}
+    for _, s in ipairs(result.sectionOrder or {}) do
+        for _, d in ipairs(ns.DEFAULTS.sectionOrder) do
+            if s == d and not seen[s] then table.insert(sections, s); seen[s] = true end
+        end
+    end
+    for _, d in ipairs(ns.DEFAULTS.sectionOrder) do
+        if not seen[d] then table.insert(sections, d) end
+    end
+    result.sectionOrder = sections
     return result
 end

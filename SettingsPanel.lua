@@ -6,7 +6,8 @@ local Panel = {}
 ns.SettingsPanel = Panel
 
 local WIDTH, PAD, ROW = 300, 12, 22
-local PRIORITY_TOP = 192   -- where the priority list starts
+local SECTION_ROWS = 3     -- weekly, zones, events
+local PRIORITY_TOP = 192 + 20 + SECTION_ROWS * 22 + 12 -- priority list starts below the section order
 local LOWER_HEIGHT = 396   -- height of the "On login" + "Window" sections
 
 local LABELS = {
@@ -22,6 +23,12 @@ local LABELS = {
 local panel, prioFrame, lower
 local ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox, minimapBox, weeklyBox, capsBox
 local rows = {}
+local sectionRows = {}
+local SECTION_LABELS = {
+    weekly = "This week (weekly quests)",
+    zones  = "World quests by zone",
+    events = "Running events",
+}
 local eventsBox
 local typeBoxes = {}
 
@@ -105,6 +112,15 @@ local function MovePriority(index, direction)
     Changed()
 end
 
+local function MoveSection(index, direction)
+    local list = ns.GetSettings().sectionOrder
+    local other = index + direction
+    if other < 1 or other > #list then return end
+    list[index], list[other] = list[other], list[index]
+    ns.SetSetting("sectionOrder", list)
+    Changed()
+end
+
 local function SetCategoryOn(category, on)
     local off = ns.GetSettings().off or {}
     if category:sub(1, 4) == "cur:" then
@@ -168,8 +184,25 @@ local function Create(parent)
     goldBox = NumberBox("Minimum gold to flag", -112, "minGold")
     ilvlBox = NumberBox("Minimum item level upgrade", -138, "minUpgrade")
 
+    -- Section order: which part of the window comes first
+    Label(panel, "Window sections (top shows first)", PAD, -172, "GameFontNormal")
+    for i = 1, SECTION_ROWS do
+        local row = CreateFrame("Frame", nil, panel)
+        row:SetSize(WIDTH - PAD * 2, 22)
+        row:SetPoint("TOPLEFT", PAD, -192 - (i - 1) * 22)
+        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.text:SetPoint("LEFT", 0, 0)
+        row.down = ArrowButton(row, "Interface\\ChatFrame\\UI-ChatIcon-ScrollDown")
+        row.down:SetPoint("RIGHT", 0, 0)
+        row.up = ArrowButton(row, "Interface\\ChatFrame\\UI-ChatIcon-ScrollUp")
+        row.up:SetPoint("RIGHT", row.down, "LEFT", -2, 0)
+        row.up:SetScript("OnClick", function() MoveSection(i, -1) end)
+        row.down:SetScript("OnClick", function() MoveSection(i, 1) end)
+        sectionRows[i] = row
+    end
+
     -- Priority list (rows are drawn in Update, because currencies can be added)
-    Label(panel, "Priority (tick = on, top shows first)", PAD, -172, "GameFontNormal")
+    Label(panel, "Priority (tick = on, top shows first)", PAD, -(PRIORITY_TOP - 20), "GameFontNormal")
     prioFrame = CreateFrame("Frame", nil, panel)
     prioFrame:SetPoint("TOPLEFT", PAD, -PRIORITY_TOP)
     prioFrame:SetSize(WIDTH - PAD * 2, ROW)
@@ -257,6 +290,14 @@ function Panel:Update()
 
     if not goldBox:HasFocus() then goldBox:SetText(tostring(s.minGold)) end
     if not ilvlBox:HasFocus() then ilvlBox:SetText(tostring(s.minUpgrade)) end
+
+    -- Section order rows
+    for i, row in ipairs(sectionRows) do
+        local section = s.sectionOrder[i]
+        row.text:SetText(i .. ". " .. (SECTION_LABELS[section] or section or ""))
+        row.up:SetEnabled(i > 1)
+        row.down:SetEnabled(i < #sectionRows)
+    end
 
     -- Priority rows
     for _, row in ipairs(rows) do row:Hide() end

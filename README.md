@@ -76,6 +76,7 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.4.0** Window sections (weekly, world quests, events) can be reordered in Settings; weekly and event sections collapse like zones
 - **1.3.0** Running holidays appear in the window, one line per activity, using All The Things; per-type switches; duplicate and name fixes
 - **1.2.0** `/kwtd event <name>`: missing collectibles from an event via All The Things
 - **1.1.1** `/kwtd att2` deeper ATT detective

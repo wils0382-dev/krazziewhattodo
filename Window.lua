@@ -69,8 +69,10 @@ local function GetCurrentZone()
     return inList[mapID] and mapID or nil
 end
 
+-- Headings are keyed by zone ID (a number) or a name like "weekly" or "event:Brewfest".
+-- "Focus on my current zone" only affects zone headings.
 local function IsExpanded(zoneID)
-    if ns.GetSettings().focusCurrentZone then
+    if ns.GetSettings().focusCurrentZone and type(zoneID) == "number" then
         local current = GetCurrentZone()
         if current ~= overrideZone then -- you've moved zone: forget temporary flips
             overrides, overrideZone = {}, current
@@ -85,7 +87,7 @@ end
 
 local function ToggleZone(zoneID)
     local expanded = IsExpanded(zoneID)
-    if ns.GetSettings().focusCurrentZone then
+    if ns.GetSettings().focusCurrentZone and type(zoneID) == "number" then
         overrides[zoneID] = not expanded
     else
         local char = ns.GetCharDB()
@@ -271,6 +273,7 @@ function Window:Render(result, keepScroll)
     if not result or not frame then return end
     lastResult = result
     local savedScroll = scroll:GetVerticalScroll()
+    local settings = result.settings or ns.GetSettings()
 
     for _, fs in ipairs(lines) do fs:Hide() end
     for _, b in ipairs(buttons) do b.yes:Hide(); b.no:Hide() end
@@ -279,7 +282,7 @@ function Window:Render(result, keepScroll)
     local width = scroll:GetWidth()
     if not width or width < 50 then width = frame:GetWidth() - PAD * 2 end
     content:SetWidth(width)
-    local y, lineCount, questCount, headerCount = 0, 0, 0, 0
+    local y, lineCount, questCount, headerCount, shownSomething = 0, 0, 0, 0, false
 
     local function Add(text, indent, font)
         lineCount = lineCount + 1
@@ -293,45 +296,12 @@ function Window:Render(result, keepScroll)
         y = y + fs:GetStringHeight() + 4
     end
 
-    -- "This week": weekly quests from your quest log
-    if result.weeklies and #result.weeklies > 0 then
-        Add("This week", 0, "GameFontNormal")
-        for _, w in ipairs(result.weeklies) do Add(ns.FormatWeekly(w), 16) end
-        y = y + 8
-    end
-
-    -- Running events (from All The Things): one line per activity
-    for _, event in ipairs(result.events or {}) do
-        local eventLines = ns.Events:Lines(event, result.settings)
-        if #eventLines > 0 then
-            Add(event.name .. "  |cffaaaaaa(event)|r", 0, "GameFontNormal")
-            for _, text in ipairs(eventLines) do Add(text, 16) end
-            y = y + 8
-        end
-    end
-
-    -- Group the visible entries by zone, keeping the sorted order
-    local zones, byZone = {}, {}
-    for _, e in ipairs(result.entries) do
-        if e.rank or showAll then
-            if not byZone[e.zoneID] then
-                byZone[e.zoneID] = {}
-                table.insert(zones, e.zoneID)
-            end
-            table.insert(byZone[e.zoneID], e)
-        end
-    end
-
-    for i, zoneID in ipairs(zones) do
-        local list = byZone[zoneID]
-        local expanded = IsExpanded(zoneID)
-        if i > 1 then y = y + 6 end
-
-        -- Zone heading: +/- icon, name, and a count when collapsed
-        local worth = 0
-        for _, e in ipairs(list) do
-            if e.isQuest and e.rank then worth = worth + 1 end
-        end
+    -- A clickable heading. Returns true if its section is expanded.
+    -- countText shows beside the name while collapsed, e.g. "(4)"
+    local function Heading(key, name, countText)
+        if shownSomething then y = y + 6 end
+        shownSomething = true
+        local expanded = IsExpanded(key)
         headerCount = headerCount + 1
         local h = GetHeader(headerCount)
         h:ClearAllPoints()
@@ -339,34 +309,88 @@ function Window:Render(result, keepScroll)
         h:SetWidth(width)
         h.icon:SetTexture(expanded and "Interface\\Buttons\\UI-MinusButton-Up"
                                     or "Interface\\Buttons\\UI-PlusButton-Up")
-        h.text:SetText(ns.ZoneName(zoneID) .. (expanded and "" or ("  |cffaaaaaa(" .. worth .. ")|r")))
-        h:SetScript("OnClick", function() ToggleZone(zoneID) end)
+        h.text:SetText(name .. ((not expanded and countText) and ("  |cffaaaaaa" .. countText .. "|r") or ""))
+        h:SetScript("OnClick", function() ToggleZone(key) end)
         h:Show()
         y = y + 20
+        return expanded
+    end
 
-        if expanded then
-            for _, e in ipairs(list) do
-                if e.isQuest then
-                    questCount = questCount + 1
-                    local b = GetButtons(questCount)
-                    local questID = e.questID
-                    b.yes:ClearAllPoints()
-                    b.yes:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -y)
-                    b.no:ClearAllPoints()
-                    b.no:SetPoint("LEFT", b.yes, "RIGHT", 4, 0)
-                    b.yes:SetAlpha(e.choice == "yes" and 1 or 0.3) -- bright = chosen
-                    b.no:SetAlpha(e.choice == "no" and 1 or 0.3)
-                    b.yes:SetScript("OnClick", function() ns.SetChoice(questID, "yes"); Window:Refresh(true) end)
-                    b.no:SetScript("OnClick", function() ns.SetChoice(questID, "no"); Window:Refresh(true) end)
-                    b.yes:Show()
-                    b.no:Show()
+    -- SECTION: weekly quests from your quest log
+    local function DrawWeekly()
+        local weeklies = result.weeklies or {}
+        if #weeklies == 0 then return end
+        local handIn = result.handIn or 0
+        if Heading("weekly", "This week", "(" .. (handIn > 0 and (handIn .. " to hand in") or #weeklies) .. ")") then
+            for _, w in ipairs(weeklies) do Add(ns.FormatWeekly(w), 16) end
+        end
+    end
+
+    -- SECTION: running events (from All The Things), one line per activity
+    local function DrawEvents()
+        for _, event in ipairs(result.events or {}) do
+            local eventLines = ns.Events:Lines(event, settings)
+            if #eventLines > 0 then
+                local open = 0
+                for _, text in ipairs(eventLines) do
+                    if not text:find("(done today)", 1, true) then open = open + 1 end
                 end
-                Add(ns.FormatLine(e), 46)
+                if Heading("event:" .. event.name, event.name .. "  |cffaaaaaa(event)|r", "(" .. open .. ")") then
+                    for _, text in ipairs(eventLines) do Add(text, 16) end
+                end
             end
         end
     end
 
-    if #zones == 0 then
+    -- SECTION: world quests, grouped by zone
+    local function DrawZones()
+        local zones, byZone = {}, {}
+        for _, e in ipairs(result.entries) do
+            if e.rank or showAll then
+                if not byZone[e.zoneID] then
+                    byZone[e.zoneID] = {}
+                    table.insert(zones, e.zoneID)
+                end
+                table.insert(byZone[e.zoneID], e)
+            end
+        end
+
+        for _, zoneID in ipairs(zones) do
+            local list = byZone[zoneID]
+            local worth = 0
+            for _, e in ipairs(list) do
+                if e.isQuest and e.rank then worth = worth + 1 end
+            end
+            if Heading(zoneID, ns.ZoneName(zoneID), "(" .. worth .. ")") then
+                for _, e in ipairs(list) do
+                    if e.isQuest then
+                        questCount = questCount + 1
+                        local b = GetButtons(questCount)
+                        local questID = e.questID
+                        b.yes:ClearAllPoints()
+                        b.yes:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -y)
+                        b.no:ClearAllPoints()
+                        b.no:SetPoint("LEFT", b.yes, "RIGHT", 4, 0)
+                        b.yes:SetAlpha(e.choice == "yes" and 1 or 0.3) -- bright = chosen
+                        b.no:SetAlpha(e.choice == "no" and 1 or 0.3)
+                        b.yes:SetScript("OnClick", function() ns.SetChoice(questID, "yes"); Window:Refresh(true) end)
+                        b.no:SetScript("OnClick", function() ns.SetChoice(questID, "no"); Window:Refresh(true) end)
+                        b.yes:Show()
+                        b.no:Show()
+                    end
+                    Add(ns.FormatLine(e), 46)
+                end
+            end
+        end
+    end
+
+    -- Draw the sections in your chosen order
+    local DRAW = { weekly = DrawWeekly, zones = DrawZones, events = DrawEvents }
+    for _, section in ipairs(settings.sectionOrder or { "weekly", "zones", "events" }) do
+        if DRAW[section] then DRAW[section]() end
+    end
+
+    if not shownSomething then
         Add("Nothing worth doing right now. Tick 'Show everything' to see all quests.", 0)
     end
 

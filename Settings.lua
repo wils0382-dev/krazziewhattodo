@@ -12,6 +12,13 @@ ns.DEFAULTS = {
     minGold    = 250, -- flag gold quests paying at least this much (in gold)
     minUpgrade = 1,   -- flag gear at least this many item levels above what you wear
 
+    -- Order of the window's sections, top first
+    sectionOrder = {
+        "weekly", -- "This week": weekly quests in your log
+        "zones",  -- world quests, grouped by zone
+        "events", -- running holidays (needs All The Things)
+    },
+
     -- Priority order inside each zone, top = most important
     priority = {
         "pick",   -- quests you ticked yourself
