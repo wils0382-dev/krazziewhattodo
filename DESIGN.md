@@ -71,6 +71,14 @@ Catches:
 
 First step: a debug command to discover what ATT exposes in its current version, and how to query it (e.g. for Brewfest), the same way we found Special Assignments.
 
+## Idea: look wider for event vendors (filed for later)
+
+**Found during Brewfest:** the Brewfest vendor sold two decor items for gold that Krazzie never listed. Krazzie only reads what ATT files *under* the Brewfest header, so anything ATT files elsewhere (e.g. its Housing section) or doesn't know about is invisible.
+
+- **Fix at the source:** report missing vendor items to the ATT team (active on Discord).
+- **Fix in Krazzie:** when an event activity is a vendor NPC, also ask ATT for every other place that NPC appears (`SearchForField("npcID", id)`) and include missing items from those too, deduplicated.
+- **Testing:** needs a live example. The two Brewfest decor items were bought, so they're collected now. Try with Hallow's End or another holiday's vendors.
+
 ## Suggested build order
 
 1. ~~**Weekly caps**: stop chasing capped currencies.~~ Built in 1.1.0.

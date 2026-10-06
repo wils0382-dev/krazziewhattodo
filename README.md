@@ -23,6 +23,7 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `/kwtd att` | Record what All The Things exposes to other addons (to the save file) |
 | `/kwtd att2` | Record ATT's database layout and test searches (to the save file) |
 | `/kwtd event <name>` | What you're still missing from an event, e.g. `/kwtd event brewfest` (needs All The Things) |
+| `/kwtd weekly` | Record recurring quests this character can see, with rewards (to the save file) |
 | `/kwtd debug` | Record hidden quest and map-marker labels for the current zone to the save file |
 
 ## Files
@@ -78,6 +79,7 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.5.6** `/kwtd weekly` detective for recurring quests this character can see
 - **1.5.5** One-handed weapons no longer count as upgrades for characters wielding a two-hander
 - **1.5.4** Setting to stop counting empty slots as gear upgrades (per character via separate settings)
 - **1.5.3** Gear upgrades sorted by size (empty slots first) and labelled "empty slot"

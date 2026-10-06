@@ -171,8 +171,9 @@ function ns.GetSettings()
             if s == d and not seen[s] then table.insert(sections, s); seen[s] = true end
         end
     end
-    for _, d in ipairs(ns.DEFAULTS.sectionOrder) do
-        if not seen[d] then table.insert(sections, d) end
+    -- A section added in a newer version slots in where it sits in the defaults
+    for i, d in ipairs(ns.DEFAULTS.sectionOrder) do
+        if not seen[d] then table.insert(sections, math.min(i, #sections + 1), d) end
     end
     result.sectionOrder = sections
     return result

@@ -221,3 +221,105 @@ function ns.DebugATT2()
 
     ns.Say("ATT deep check done. Type /reload to save it to file.")
 end
+
+------------------------------------------------------------
+-- /kwtd weekly : what recurring (weekly/daily) quests can this
+-- character see in each Midnight zone, and what do they reward?
+-- Saved to file. Takes ~5 seconds while the game loads the details.
+------------------------------------------------------------
+local function Fields(t)
+    local parts = {}
+    for k, v in pairs(t) do
+        if type(v) ~= "table" and type(v) ~= "function" then
+            table.insert(parts, tostring(k) .. "=" .. tostring(v))
+        end
+    end
+    table.sort(parts)
+    return table.concat(parts, " ")
+end
+
+local function RewardText(questID)
+    local parts = {}
+    if HaveQuestRewardData then table.insert(parts, "rewardData=" .. tostring(HaveQuestRewardData(questID))) end
+    local ok, copper = pcall(GetQuestLogRewardMoney, questID)
+    if ok and copper and copper > 0 then table.insert(parts, "gold=" .. math.floor(copper / 10000)) end
+    if C_QuestLog.GetQuestRewardCurrencies then
+        local ok2, list = pcall(C_QuestLog.GetQuestRewardCurrencies, questID)
+        if ok2 and list then
+            for _, c in ipairs(list) do
+                table.insert(parts, ("cur:%s x%s"):format(tostring(c.name), tostring(c.totalRewardAmount or c.baseRewardAmount)))
+            end
+        end
+    end
+    local ok3, count = pcall(GetNumQuestLogRewards, questID)
+    if ok3 and count and count > 0 then
+        for i = 1, count do
+            local ok4, name, _, amount = pcall(GetQuestLogRewardInfo, i, questID)
+            if ok4 and name then table.insert(parts, ("item:%s x%s"):format(name, tostring(amount))) end
+        end
+    end
+    return table.concat(parts, " | ")
+end
+
+function ns.DebugWeekly()
+    KrazzieDB = KrazzieDB or {}
+    KrazzieDB.debug = {}
+    local function Log(line) table.insert(KrazzieDB.debug, line) end
+
+    -- First pass: ask the game to load quest-giver info and reward details
+    for _, zoneID in ipairs(ns.ZONES) do
+        if C_QuestLine and C_QuestLine.RequestQuestLinesForMap then
+            pcall(C_QuestLine.RequestQuestLinesForMap, zoneID)
+        end
+        for _, info in ipairs(C_TaskQuest.GetQuestsOnMap(zoneID) or {}) do
+            local questID = info.questID or info.questId
+            if questID and C_TaskQuest.RequestPreloadRewardData then
+                pcall(C_TaskQuest.RequestPreloadRewardData, questID)
+            end
+        end
+    end
+    ns.Say("Gathering weekly quest info, give it 5 seconds...")
+
+    -- Second pass: record everything
+    C_Timer.After(5, function()
+        for _, zoneID in ipairs(ns.ZONES) do
+            Log("==== " .. ns.ZoneName(zoneID) .. " (map " .. zoneID .. ") ====")
+
+            Log("-- On the map, not world quests --")
+            for _, info in ipairs(C_TaskQuest.GetQuestsOnMap(zoneID) or {}) do
+                local questID = info.questID or info.questId
+                if questID and not C_QuestLog.IsWorldQuest(questID) then
+                    local class
+                    if C_QuestInfoSystem and C_QuestInfoSystem.GetQuestClassification then
+                        local ok, c = pcall(C_QuestInfoSystem.GetQuestClassification, questID)
+                        class = ok and c
+                    end
+                    local ok, tag = pcall(C_QuestLog.GetQuestTagInfo, questID)
+                    Log(("[%d] %s | class=%s | tag=%s | done=%s | inLog=%s | onMap=%s")
+                        :format(questID, ns.GetTitle(questID), tostring(class),
+                            tostring(ok and tag and tag.tagName),
+                            tostring(C_QuestLog.IsQuestFlaggedCompleted(questID)),
+                            tostring(C_QuestLog.GetLogIndexForQuestID(questID) ~= nil),
+                            tostring(info.mapID)))
+                    Log("    rewards: " .. RewardText(questID))
+                end
+            end
+
+            Log("-- Available quest givers --")
+            if C_QuestLine and C_QuestLine.GetAvailableQuestLines then
+                local ok, lines = pcall(C_QuestLine.GetAvailableQuestLines, zoneID)
+                if ok and lines and #lines > 0 then
+                    for _, line in ipairs(lines) do
+                        Log("  " .. Fields(line))
+                        if line.questID then Log("    rewards: " .. RewardText(line.questID)) end
+                    end
+                else
+                    Log("  none")
+                end
+            else
+                Log("  (quest giver info not available)")
+            end
+        end
+        ns.Say("Weekly check saved. Type /reload to write it to file.")
+    end)
+end

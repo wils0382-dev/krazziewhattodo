@@ -58,15 +58,7 @@ end
 ------------------------------------------------------------
 -- The Midnight zone you're standing in (climbs up from caves, buildings, etc.)
 local function GetCurrentZone()
-    local inList = {}
-    for _, id in ipairs(ns.ZONES) do inList[id] = true end
-    local mapID = C_Map.GetBestMapForUnit("player")
-    for _ = 1, 10 do
-        if not mapID or mapID == 0 or inList[mapID] then break end
-        local info = C_Map.GetMapInfo(mapID)
-        mapID = info and info.parentMapID
-    end
-    return inList[mapID] and mapID or nil
+    return ns.GetCurrentZone() -- lives in Scanner.lua
 end
 
 -- Headings are keyed by zone ID (a number) or a name like "weekly" or "event:Brewfest".

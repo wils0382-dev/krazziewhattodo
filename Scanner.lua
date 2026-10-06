@@ -328,6 +328,21 @@ local function CollectWeeklies()
 end
 
 ------------------------------------------------------------
+-- 5c. WHERE ARE YOU? The Midnight zone you're in (climbs up from caves etc.)
+------------------------------------------------------------
+function ns.GetCurrentZone()
+    local inList = {}
+    for _, id in ipairs(ns.ZONES) do inList[id] = true end
+    local mapID = C_Map.GetBestMapForUnit("player")
+    for _ = 1, 10 do
+        if not mapID or mapID == 0 or inList[mapID] then break end
+        local info = C_Map.GetMapInfo(mapID)
+        mapID = info and info.parentMapID
+    end
+    return inList[mapID] and mapID or nil
+end
+
+------------------------------------------------------------
 -- 6. BUILD the sorted list (grouped by zone, best first)
 ------------------------------------------------------------
 local function BuildEntries(list)
