@@ -79,6 +79,44 @@ First step: a debug command to discover what ATT exposes in its current version,
 - **Fix in Krazzie:** when an event activity is a vendor NPC, also ask ATT for every other place that NPC appears (`SearchForField("npcID", id)`) and include missing items from those too, deduplicated.
 - **Testing:** needs a live example. The two Brewfest decor items were bought, so they're collected now. Try with Hallow's End or another holiday's vendors.
 
+## Next major feature: weekly activities (filed for later)
+
+Source: an AI-generated summary James gathered. **Treat its numbers and details as unverified**: Krazzie reads real rewards from the game, so this list is only a checklist of what to look for.
+
+### Already covered (1.6.0 repeatable quests)
+
+- **Dungeon weeklies** (e.g. [Dungeon] Murder Row, Windrunner Spire) appear as repeatable map quests.
+- **Housing / Neighborhood: Going Postal** appears with Voidlight Marl and Community Coupons.
+- **Prey hunts** (e.g. "Prey: Anguish from Beyond") appear with Coffer Key Shards.
+
+### Needs new detection
+
+| Activity | Where | How Krazzie could detect it |
+|---|---|---|
+| Pinnacle weekly (Unity Against the Void, from Lady Liadrin, Silvermoon) | Quest | In log: already in "This week". Missing: a reminder to pick it up. Needs its quest ID(s); check completion with `IsQuestFlaggedCompleted`. |
+| A Call to Delves (5 Midnight delves) | Quest | Same as above. |
+| Bountiful Delves | Map | Delve markers (area POIs); bountiful ones likely have their own icon name. Detective step needed. |
+| Saltheril's Soiree (Eversong) | Map event | Already seen in debug under "Map events" (POI 8600, widget text). Completion via its weekly quest(s). |
+| Abundance (all zones) | Map event | Detective step needed. |
+| Legends of the Haranir (Harandar, warband-wide) | Scenario | Detective step needed; account-wide completion. |
+| Stormarion Assault / Defending the Singularity (Voidstorm) | Map event | Related repeatables already seen (Stormarion Core rewards). Detective step needed. |
+| Profession weeklies | Quests | Filter by the character's professions (`GetProfessions`). |
+| Prey weekly (Garden Variety Sacrifices, Renown 4) | Quest | Unlock-dependent; check availability/completion by quest ID. |
+
+### The core design: three modes per activity, per character
+
+- **Always**: chase it on this character regardless (e.g. the Pinnacle weekly on every toon).
+- **If worth it**: only flag it when its rewards match this character's priorities, like world quests.
+- **Off**: never show it on this character.
+
+Fits the existing account/character settings layers. Would live on its own tab in the settings redesign.
+
+### Approach
+
+1. Detective pass during the week: map events and area POIs per zone (the existing `/kwtd debug` already records these), plus quest IDs for the named weeklies.
+2. Build a small, hand-checked list of weekly activities (name, quest IDs, zone, account-wide or not).
+3. "Weekly activities" section in the window, using the three modes.
+
 ## Idea: settings redesign (filed for later)
 
 The settings panel keeps getting longer. Plan:

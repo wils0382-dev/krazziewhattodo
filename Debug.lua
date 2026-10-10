@@ -323,3 +323,69 @@ function ns.DebugWeekly()
         ns.Say("Weekly check saved. Type /reload to write it to file.")
     end)
 end
+
+------------------------------------------------------------
+-- /kwtd activities : one sweep of every Midnight zone for weekly
+-- activities - map markers, map events, delves - plus every quest in
+-- your log with its ID and how often it repeats. Saved to file.
+------------------------------------------------------------
+function ns.DebugActivities()
+    KrazzieDB = KrazzieDB or {}
+    KrazzieDB.debug = {}
+    local function Log(line)
+        table.insert(KrazzieDB.debug, (tostring(line):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))
+    end
+
+    local function LogPOIs(label, getList, zoneID)
+        if not getList then return end
+        local ok, poiList = pcall(getList, zoneID)
+        if not ok or not poiList or #poiList == 0 then return end
+        Log("-- " .. label .. " --")
+        for _, poiID in ipairs(poiList) do
+            local ok2, poi = pcall(C_AreaPoiInfo.GetAreaPOIInfo, zoneID, poiID)
+            if ok2 and poi then
+                Log(("[poi %d] %s | atlas=%s | desc=%s | widgets=%s"):format(poiID, tostring(poi.name),
+                    tostring(poi.atlasName), tostring(poi.description),
+                    tostring(ns.GetWidgetText(poi.tooltipWidgetSet))))
+            end
+        end
+    end
+
+    -- 1. Every zone: markers, events, delves
+    for _, zoneID in ipairs(ns.ZONES) do
+        Log("==== " .. ns.ZoneName(zoneID) .. " (map " .. zoneID .. ") ====")
+        if C_AreaPoiInfo then
+            LogPOIs("Map markers", C_AreaPoiInfo.GetAreaPOIForMap, zoneID)
+            LogPOIs("Map events", C_AreaPoiInfo.GetEventsForMap, zoneID)
+            LogPOIs("Delves", C_AreaPoiInfo.GetDelvesForMap, zoneID)
+        end
+    end
+
+    -- 2. Every quest in your log
+    Log("==== Quest log ====")
+    local QC = (Enum and Enum.QuestClassification) or {}
+    local classNames = {}
+    for name, value in pairs(QC) do classNames[value] = name end
+    local FREQ = { [0] = "normal", [1] = "daily", [2] = "weekly" }
+    if C_QuestLog.GetNumQuestLogEntries and C_QuestLog.GetInfo then
+        for i = 1, C_QuestLog.GetNumQuestLogEntries() do
+            local info = C_QuestLog.GetInfo(i)
+            if info and info.isHeader then
+                Log("-- " .. tostring(info.title) .. " --")
+            elseif info and info.questID then
+                local class
+                if C_QuestInfoSystem and C_QuestInfoSystem.GetQuestClassification then
+                    local ok, c = pcall(C_QuestInfoSystem.GetQuestClassification, info.questID)
+                    class = ok and (classNames[c] or c)
+                end
+                local accountWide = C_QuestLog.IsAccountQuest and C_QuestLog.IsAccountQuest(info.questID)
+                Log(("[%d] %s | repeats=%s | class=%s | accountWide=%s | ready=%s")
+                    :format(info.questID, tostring(info.title), FREQ[info.frequency] or tostring(info.frequency),
+                        tostring(class), tostring(accountWide),
+                        tostring(C_QuestLog.ReadyForTurnIn and C_QuestLog.ReadyForTurnIn(info.questID))))
+            end
+        end
+    end
+
+    ns.Say("Activity sweep saved. Type /reload to write it to file.")
+end

@@ -9,6 +9,7 @@
 -- /kwtd att2      = ATT's database layout and test searches (saved to file)
 -- /kwtd event X   = what you're missing from event X, e.g. /kwtd event brewfest (needs ATT)
 -- /kwtd weekly    = recurring quests this character can see, with rewards (saved to file)
+-- /kwtd activities = every zone's markers, events and delves, plus your quest log (saved to file)
 
 local _, ns = ...
 
@@ -130,6 +131,8 @@ SlashCmdList.KRAZZIEWTD = function(msg)
         ns.DebugATT()
     elseif msg == "att2" then
         ns.DebugATT2()
+    elseif msg == "activities" then
+        ns.DebugActivities()
     elseif msg == "weekly" then
         ns.DebugWeekly()
     elseif msg:find("^event") then

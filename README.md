@@ -24,6 +24,7 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `/kwtd att2` | Record ATT's database layout and test searches (to the save file) |
 | `/kwtd event <name>` | What you're still missing from an event, e.g. `/kwtd event brewfest` (needs All The Things) |
 | `/kwtd weekly` | Record recurring quests this character can see, with rewards (to the save file) |
+| `/kwtd activities` | Record every zone's markers, events and delves, plus your quest log with IDs (to the save file) |
 | `/kwtd debug` | Record hidden quest and map-marker labels for the current zone to the save file |
 
 ## Files
@@ -82,6 +83,7 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.6.2** `/kwtd activities` detective for weekly activities across all zones
 - **1.6.1** Classic recognised as a Timewalking expansion
 - **1.6.0** Repeatable quests on the map (weeklies, raid/dungeon quests, Prey...) judged like world quests; events disappear when they end; Timewalking shows only the running expansion plus a total
 - **1.5.6** `/kwtd weekly` detective for recurring quests this character can see
