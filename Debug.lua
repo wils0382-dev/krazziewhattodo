@@ -361,7 +361,29 @@ function ns.DebugActivities()
         end
     end
 
-    -- 2. Every quest in your log
+    -- 2. Great Vault, World row (delves and outdoor activities)
+    Log("==== Great Vault (world) ====")
+    local vaultType = (Enum and Enum.WeeklyRewardChestThresholdType and Enum.WeeklyRewardChestThresholdType.World) or 6
+    if C_WeeklyRewards and C_WeeklyRewards.GetActivities then
+        local ok, list = pcall(C_WeeklyRewards.GetActivities, vaultType)
+        for _, a in ipairs((ok and list) or {}) do
+            Log(("slot: threshold=%s progress=%s level=%s id=%s"):format(tostring(a.threshold),
+                tostring(a.progress), tostring(a.level), tostring(a.id)))
+        end
+    end
+    if C_WeeklyRewards and C_WeeklyRewards.GetSortedProgressForActivity then
+        local ok, list = pcall(C_WeeklyRewards.GetSortedProgressForActivity, vaultType, false)
+        Log("sorted progress ok=" .. tostring(ok))
+        for _, e in ipairs((ok and type(list) == "table" and list) or {}) do
+            local parts = {}
+            for k, v in pairs(e) do table.insert(parts, tostring(k) .. "=" .. tostring(v)) end
+            Log("  run: " .. table.concat(parts, " "))
+        end
+    else
+        Log("sorted progress: not available")
+    end
+
+    -- 3. Every quest in your log
     Log("==== Quest log ====")
     local QC = (Enum and Enum.QuestClassification) or {}
     local classNames = {}
@@ -408,8 +430,30 @@ function ns.RecordTurnIn(questID)
         title = title,
         zone  = mapID and ns.ZoneName(mapID) or "?",
         time  = date("%Y-%m-%d %H:%M"),
+        at    = time(), -- for "handed in since the last daily reset"
     })
     while #db.turnins > MAX_TURNINS do table.remove(db.turnins) end
+end
+
+-- Quest IDs you've handed in since the last daily reset. Some repeatable
+-- quests aren't flagged "completed" in a way addons can see, so this is
+-- Krazzie's own record of what's done today.
+function ns.TurnedInToday()
+    local done = {}
+    local untilReset = (C_DateAndTime and C_DateAndTime.GetSecondsUntilDailyReset
+        and C_DateAndTime.GetSecondsUntilDailyReset()) or 0
+    local lastReset = time() + untilReset - 24 * 60 * 60
+    for _, t in ipairs(ns.GetDB().turnins or {}) do
+        local at = t.at
+        if not at and t.time then
+            -- Older records only have text like "2026-10-10 17:33"
+            local y, mo, d, h, mi = t.time:match("(%d+)-(%d+)-(%d+) (%d+):(%d+)")
+            if y then at = time({ year = tonumber(y), month = tonumber(mo), day = tonumber(d),
+                                  hour = tonumber(h), min = tonumber(mi) }) end
+        end
+        if at and at >= lastReset then done[t.id] = true end
+    end
+    return done
 end
 
 function ns.ShowTurnIns()

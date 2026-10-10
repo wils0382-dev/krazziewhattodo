@@ -45,6 +45,9 @@ ns.DEFAULTS = {
     showWeeklies     = true,  -- show weekly quests from your quest log at the top
     showRepeatables  = true,  -- include repeatable quests on the map (weeklies, raid/dungeon quests...)
     showActivities   = true,  -- show this week's activities (bountiful delves, events, ritual sites)
+    showBountifulDelves = false, -- list each bountiful delve individually (the progress line is always shown)
+    delveTier = 11,  -- delve tier that counts towards your weekly delve goal
+    delveGoal = 4,   -- how many delves at that tier (or higher) you want each week
     respectCaps      = true,  -- stop chasing currencies you've capped this week (or are full on)
     emptySlotUpgrades = true, -- gear for a slot with nothing equipped counts as an upgrade
 
@@ -82,10 +85,10 @@ ns.COUNTS_AS = {
 }
 
 -- Weekly activities and the quest(s) that mean "done this week".
--- [map marker ID] = { quest IDs }. Find marker IDs with /kwtd activities,
--- and quest IDs with /kwtd turnins after finishing the activity.
+-- Link by the activity's name as shown in the window (any capitals),
+-- or by map marker ID. Find quest IDs with /kwtd turnins after finishing it.
 ns.ACTIVITY_QUESTS = {
-    [8742] = { 94446 }, -- Prey (Silvermoon): the weekly Prey quest
+    ["Prey"] = { 94446 }, -- the weekly Prey quest
 }
 
 -- Quest tag the game gives an UNLOCKED Special Assignment ("Capstone World Quest")

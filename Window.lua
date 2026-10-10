@@ -321,15 +321,15 @@ function Window:Render(result, keepScroll)
     -- SECTION: this week's activities (bountiful delves, events, ritual sites)
     local function DrawActivities()
         local acts = result.activities
-        if not acts or #acts.list == 0 then return end
-        local open = 0
+        if not acts then return end
+        local delveText, delvesDone = ns.Activities:DelveLine(acts.delves, acts.keys)
+        if #acts.list == 0 and not delveText then return end
+        local open = (delveText and not delvesDone) and 1 or 0
         for _, a in ipairs(acts.list) do
             if a.choice ~= "no" and not a.done then open = open + 1 end
         end
         if not Heading("activities", "This week's activities", "(" .. open .. ")") then return end
-        if acts.keys then
-            Add(("|cffaaaaaaRestored Coffer Keys: |r%d"):format(acts.keys), 16)
-        end
+        if delveText then Add(delveText, 16) end
         for _, a in ipairs(acts.list) do
             if a.choice ~= "no" or showAll then
                 questCount = questCount + 1

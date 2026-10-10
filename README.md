@@ -62,7 +62,8 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - The calendar lists a holiday on its last day even after it ends; check `endTime`.
 - Delves come from `C_AreaPoiInfo.GetDelvesForMap`; bountiful ones have atlas `delves-bountiful` (regular: `delves-regular`). Their tooltip shows Restored Coffer Keys held and the story variant.
 - Weekly events have their own map markers (`C_AreaPoiInfo.GetEventsForMap`), e.g. Saltheril's Soiree (POI 8600), Abyss Anglers (8584), Legends of the Haranir (8423), Stormarion Assault (8419), Abundance (rotating, e.g. 8526 "Mining Voidburrow", bountiful variant `UI-EventPoi-abundancebountiful`), Prey (8742), Void Incursion (8757, region-wide progress). Ritual Sites are area markers with atlas `Ritual-Sites-Map-Icon`.
-- Prey's weekly quest is 94446 (found by James). Activities are linked to their "done" quests in `ns.ACTIVITY_QUESTS`.
+- Prey's weekly quest is 94446 (found by James; to confirm). Prey can appear under more than one map marker, so activities are merged and linked by name.
+- Some repeatable quests (e.g. Vaults of Atal'Utek Temple Patrols) reappear on the map after hand-in without being flagged completed; Krazzie hides anything handed in since the daily reset, using its own turn-in record. Activities are linked to their "done" quests in `ns.ACTIVITY_QUESTS`.
 - No "Pinnacle weekly" from Lady Liadrin or "A Call to Delves" quest was found in game (the AI summary was wrong or they need unlocking).
 - Silvermoon City world quests count towards Eversong Woods' unlock.
 - Zone map IDs: Eversong Woods 2395, Zul'Aman 2437, Harandar 2413, Voidstorm 2405, Silvermoon City 2393, The Coiled Isle 2512, Vaults of Atal'Utek 2509.
@@ -90,6 +91,8 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.8.0** Delve progress line (runs at your goal tier this week, from the Great Vault) replaces individual bountiful delve lines; tier and goal in Settings.lua
+- **1.7.3** Quests handed in since the daily reset stay hidden (some repeatables aren't flagged completed); activities merged by name; activity links by name
 - **1.7.2** Activities can be ticked off automatically via linked weekly quests (`ns.ACTIVITY_QUESTS` in Settings.lua); Prey linked to quest 94446
 - **1.7.1** Turn-in recorder: notes every quest you hand in, to learn the quest IDs behind weekly activities
 - **1.7.0** "This week's activities" section: bountiful delves, events and ritual sites from every zone, with Restored Coffer Key count; tick/cross per character until weekly reset
