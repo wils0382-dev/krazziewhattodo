@@ -465,3 +465,42 @@ function ns.ShowTurnIns()
     end
     ns.Say("Saved to file on your next /reload or logout.")
 end
+
+------------------------------------------------------------
+-- SPOT THE DIFFERENCE: find hidden "tracking" quests.
+-- /kwtd mark  = remember every quest the game says you've completed
+-- /kwtd diff  = list quests that became complete since the mark,
+--               including hidden ones that never show as a hand-in
+------------------------------------------------------------
+local marked -- kept in memory only; a /reload between mark and diff loses it
+
+function ns.MarkQuests()
+    if not C_QuestLog.GetAllCompletedQuestIDs then ns.Say("The game doesn't offer this list.") return end
+    marked = {}
+    local count = 0
+    for _, id in ipairs(C_QuestLog.GetAllCompletedQuestIDs() or {}) do
+        marked[id] = true
+        count = count + 1
+    end
+    ns.Say(("Marked %d completed quests. Do the activity, then type /kwtd diff (no /reload in between)."):format(count))
+end
+
+function ns.DiffQuests()
+    if not marked then ns.Say("Type /kwtd mark first, before the activity.") return end
+    local new = {}
+    for _, id in ipairs(C_QuestLog.GetAllCompletedQuestIDs() or {}) do
+        if not marked[id] then table.insert(new, id) end
+    end
+    table.sort(new)
+    if #new == 0 then ns.Say("Nothing new has been completed since the mark.") return end
+
+    local db = ns.GetDB()
+    db.lastDiff = {}
+    for _, id in ipairs(new) do
+        local title = (C_QuestLog.GetTitleForQuestID and C_QuestLog.GetTitleForQuestID(id)) or nil
+        local line = ("[%d] %s"):format(id, title or "|cff888888(hidden - no name)|r")
+        print("  " .. line)
+        table.insert(db.lastDiff, (line:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))
+    end
+    ns.Say(("%d quests completed since the mark. Hidden ones are often the weekly 'done' flag."):format(#new))
+end

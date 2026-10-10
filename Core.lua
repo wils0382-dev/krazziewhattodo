@@ -11,6 +11,7 @@
 -- /kwtd weekly    = recurring quests this character can see, with rewards (saved to file)
 -- /kwtd activities = every zone's markers, events and delves, plus your quest log (saved to file)
 -- /kwtd turnins   = the last 20 quests you handed in, with their IDs
+-- /kwtd mark, /kwtd diff = find quests (including hidden ones) completed in between
 
 local _, ns = ...
 
@@ -133,6 +134,10 @@ SlashCmdList.KRAZZIEWTD = function(msg)
         ns.DebugATT()
     elseif msg == "att2" then
         ns.DebugATT2()
+    elseif msg == "mark" then
+        ns.MarkQuests()
+    elseif msg == "diff" then
+        ns.DiffQuests()
     elseif msg == "turnins" then
         ns.ShowTurnIns()
     elseif msg == "activities" then

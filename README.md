@@ -26,6 +26,7 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `/kwtd weekly` | Record recurring quests this character can see, with rewards (to the save file) |
 | `/kwtd activities` | Record every zone's markers, events and delves, plus your quest log with IDs (to the save file) |
 | `/kwtd turnins` | The last 20 quests you handed in, with their IDs (Krazzie records the last 50) |
+| `/kwtd mark` then `/kwtd diff` | List every quest completed in between, including hidden tracking quests (no /reload in between) |
 | `/kwtd debug` | Record hidden quest and map-marker labels for the current zone to the save file |
 
 ## Files
@@ -63,6 +64,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - Delves come from `C_AreaPoiInfo.GetDelvesForMap`; bountiful ones have atlas `delves-bountiful` (regular: `delves-regular`). Their tooltip shows Restored Coffer Keys held and the story variant.
 - Weekly events have their own map markers (`C_AreaPoiInfo.GetEventsForMap`), e.g. Saltheril's Soiree (POI 8600), Abyss Anglers (8584), Legends of the Haranir (8423), Stormarion Assault (8419), Abundance (rotating, e.g. 8526 "Mining Voidburrow", bountiful variant `UI-EventPoi-abundancebountiful`), Prey (8742), Void Incursion (8757, region-wide progress). Ritual Sites are area markers with atlas `Ritual-Sites-Map-Icon`.
 - Prey's weekly quest is 94446 (found by James; to confirm). Prey can appear under more than one map marker, so activities are merged and linked by name.
+- Saltheril's Soiree: weekly hub quest 91966 (from Wowhead); the three quests you choose under it change weekly. To confirm: is 91966 complete on pickup or only at the end? `/kwtd mark` / `/kwtd diff` finds these.
 - Some repeatable quests (e.g. Vaults of Atal'Utek Temple Patrols) reappear on the map after hand-in without being flagged completed; Krazzie hides anything handed in since the daily reset, using its own turn-in record. Activities are linked to their "done" quests in `ns.ACTIVITY_QUESTS`.
 - No "Pinnacle weekly" from Lady Liadrin or "A Call to Delves" quest was found in game (the AI summary was wrong or they need unlocking).
 - Silvermoon City world quests count towards Eversong Woods' unlock.
@@ -91,6 +93,8 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.8.2** Saltheril's Soiree linked to its weekly hub quest (91966)
+- **1.8.1** `/kwtd mark` and `/kwtd diff` to find hidden tracking quests behind weekly events
 - **1.8.0** Delve progress line (runs at your goal tier this week, from the Great Vault) replaces individual bountiful delve lines; tier and goal in Settings.lua
 - **1.7.3** Quests handed in since the daily reset stay hidden (some repeatables aren't flagged completed); activities merged by name; activity links by name
 - **1.7.2** Activities can be ticked off automatically via linked weekly quests (`ns.ACTIVITY_QUESTS` in Settings.lua); Prey linked to quest 94446
