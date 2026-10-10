@@ -10,6 +10,7 @@
 -- /kwtd event X   = what you're missing from event X, e.g. /kwtd event brewfest (needs ATT)
 -- /kwtd weekly    = recurring quests this character can see, with rewards (saved to file)
 -- /kwtd activities = every zone's markers, events and delves, plus your quest log (saved to file)
+-- /kwtd turnins   = the last 20 quests you handed in, with their IDs
 
 local _, ns = ...
 
@@ -69,7 +70,8 @@ for _, event in ipairs({
 }) do
     pcall(watcher.RegisterEvent, watcher, event)
 end
-watcher:SetScript("OnEvent", function(_, event)
+watcher:SetScript("OnEvent", function(_, event, ...)
+    if event == "QUEST_TURNED_IN" then ns.RecordTurnIn((...)) end -- note its ID for later
     -- Anything except map-marker changes might change what events you're missing
     if event ~= "AREA_POIS_UPDATED" then ns.Events:Invalidate() end
     RefreshSoon()
@@ -131,6 +133,8 @@ SlashCmdList.KRAZZIEWTD = function(msg)
         ns.DebugATT()
     elseif msg == "att2" then
         ns.DebugATT2()
+    elseif msg == "turnins" then
+        ns.ShowTurnIns()
     elseif msg == "activities" then
         ns.DebugActivities()
     elseif msg == "weekly" then

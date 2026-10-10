@@ -389,3 +389,35 @@ function ns.DebugActivities()
 
     ns.Say("Activity sweep saved. Type /reload to write it to file.")
 end
+
+------------------------------------------------------------
+-- TURN-IN RECORDER: quietly notes every quest you hand in (ID, name,
+-- where, when), keeping the latest 50. Used to learn the quest IDs
+-- behind weekly activities. /kwtd turnins shows the last 20.
+------------------------------------------------------------
+local MAX_TURNINS = 50
+
+function ns.RecordTurnIn(questID)
+    if not questID then return end
+    local db = ns.GetDB()
+    db.turnins = db.turnins or {}
+    local mapID = C_Map.GetBestMapForUnit("player")
+    local title = (C_QuestLog.GetTitleForQuestID and C_QuestLog.GetTitleForQuestID(questID)) or ns.GetTitle(questID)
+    table.insert(db.turnins, 1, {
+        id    = questID,
+        title = title,
+        zone  = mapID and ns.ZoneName(mapID) or "?",
+        time  = date("%Y-%m-%d %H:%M"),
+    })
+    while #db.turnins > MAX_TURNINS do table.remove(db.turnins) end
+end
+
+function ns.ShowTurnIns()
+    local list = ns.GetDB().turnins or {}
+    if #list == 0 then ns.Say("No hand-ins recorded yet.") return end
+    for i, t in ipairs(list) do
+        if i > 20 then break end
+        print(("  |cffaaaaaa%s|r [%d] %s |cff888888(%s)|r"):format(t.time, t.id, tostring(t.title), t.zone))
+    end
+    ns.Say("Saved to file on your next /reload or logout.")
+end

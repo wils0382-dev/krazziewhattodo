@@ -324,7 +324,7 @@ function Window:Render(result, keepScroll)
         if not acts or #acts.list == 0 then return end
         local open = 0
         for _, a in ipairs(acts.list) do
-            if a.choice ~= "no" then open = open + 1 end
+            if a.choice ~= "no" and not a.done then open = open + 1 end
         end
         if not Heading("activities", "This week's activities", "(" .. open .. ")") then return end
         if acts.keys then

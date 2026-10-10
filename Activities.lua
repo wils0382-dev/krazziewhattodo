@@ -25,6 +25,14 @@ local function Clean(text)
     return (text:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
+-- Done this week? True if any quest linked to this marker (Settings.lua) is complete
+local function IsDone(poiID)
+    for _, questID in ipairs(ns.ACTIVITY_QUESTS[poiID] or {}) do
+        if C_QuestLog.IsQuestFlaggedCompleted(questID) then return true end
+    end
+    return false
+end
+
 -- Seconds until the weekly reset (for "skip this week" choices)
 local function SecondsToReset()
     if C_DateAndTime and C_DateAndTime.GetSecondsUntilWeeklyReset then
@@ -133,6 +141,7 @@ function Activities:Collect(settings)
                                 name = Clean(poi.name),
                                 detail = DetailOf(kind, widgetText),
                                 choice = self:GetChoice(key),
+                                done = IsDone(poiID),
                             })
                         end
                     end
@@ -141,10 +150,15 @@ function Activities:Collect(settings)
         end
     end
 
-    -- Picks first, skipped last, then by kind and name
+    -- Picks first, then open ones, then done, then skipped; then by kind and name
+    local function Place(x)
+        if x.choice == "no" then return 3 end
+        if x.done then return 2 end
+        if x.choice == "yes" then return 0 end
+        return 1
+    end
     table.sort(result.list, function(a, b)
-        local pa = (a.choice == "yes") and 0 or (a.choice == "no") and 2 or 1
-        local pb = (b.choice == "yes") and 0 or (b.choice == "no") and 2 or 1
+        local pa, pb = Place(a), Place(b)
         if pa ~= pb then return pa < pb end
         local ka, kb = KIND_ORDER[a.kind] or 9, KIND_ORDER[b.kind] or 9
         if ka ~= kb then return ka < kb end
@@ -159,6 +173,10 @@ function Activities:Format(a)
     if a.detail then extra = extra .. " \194\183 " .. a.detail end
     local text = ("|cffb0b0ff[%s]|r %s |cff888888(%s)|r"):format(a.kind, a.name, extra)
     if a.choice == "yes" then text = text .. " |cff66ccffYour pick|r" end
-    if a.choice == "no" then text = "|cff888888" .. Clean(text) .. " (skipped this week)|r" end
+    if a.choice == "no" then
+        text = "|cff888888" .. Clean(text) .. " (skipped this week)|r"
+    elseif a.done then
+        text = "|cff888888" .. Clean(text) .. " (done this week)|r"
+    end
     return text
 end

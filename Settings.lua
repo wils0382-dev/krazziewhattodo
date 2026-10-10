@@ -81,6 +81,13 @@ ns.COUNTS_AS = {
     [2509] = 2512, -- Vaults of Atal'Utek counts as The Coiled Isle (assumed)
 }
 
+-- Weekly activities and the quest(s) that mean "done this week".
+-- [map marker ID] = { quest IDs }. Find marker IDs with /kwtd activities,
+-- and quest IDs with /kwtd turnins after finishing the activity.
+ns.ACTIVITY_QUESTS = {
+    [8742] = { 94446 }, -- Prey (Silvermoon): the weekly Prey quest
+}
+
 -- Quest tag the game gives an UNLOCKED Special Assignment ("Capstone World Quest")
 ns.SA_TAG_ID = 286
 

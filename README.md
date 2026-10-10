@@ -25,6 +25,7 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `/kwtd event <name>` | What you're still missing from an event, e.g. `/kwtd event brewfest` (needs All The Things) |
 | `/kwtd weekly` | Record recurring quests this character can see, with rewards (to the save file) |
 | `/kwtd activities` | Record every zone's markers, events and delves, plus your quest log with IDs (to the save file) |
+| `/kwtd turnins` | The last 20 quests you handed in, with their IDs (Krazzie records the last 50) |
 | `/kwtd debug` | Record hidden quest and map-marker labels for the current zone to the save file |
 
 ## Files
@@ -61,6 +62,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - The calendar lists a holiday on its last day even after it ends; check `endTime`.
 - Delves come from `C_AreaPoiInfo.GetDelvesForMap`; bountiful ones have atlas `delves-bountiful` (regular: `delves-regular`). Their tooltip shows Restored Coffer Keys held and the story variant.
 - Weekly events have their own map markers (`C_AreaPoiInfo.GetEventsForMap`), e.g. Saltheril's Soiree (POI 8600), Abyss Anglers (8584), Legends of the Haranir (8423), Stormarion Assault (8419), Abundance (rotating, e.g. 8526 "Mining Voidburrow", bountiful variant `UI-EventPoi-abundancebountiful`), Prey (8742), Void Incursion (8757, region-wide progress). Ritual Sites are area markers with atlas `Ritual-Sites-Map-Icon`.
+- Prey's weekly quest is 94446 (found by James). Activities are linked to their "done" quests in `ns.ACTIVITY_QUESTS`.
 - No "Pinnacle weekly" from Lady Liadrin or "A Call to Delves" quest was found in game (the AI summary was wrong or they need unlocking).
 - Silvermoon City world quests count towards Eversong Woods' unlock.
 - Zone map IDs: Eversong Woods 2395, Zul'Aman 2437, Harandar 2413, Voidstorm 2405, Silvermoon City 2393, The Coiled Isle 2512, Vaults of Atal'Utek 2509.
@@ -88,6 +90,8 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.7.2** Activities can be ticked off automatically via linked weekly quests (`ns.ACTIVITY_QUESTS` in Settings.lua); Prey linked to quest 94446
+- **1.7.1** Turn-in recorder: notes every quest you hand in, to learn the quest IDs behind weekly activities
 - **1.7.0** "This week's activities" section: bountiful delves, events and ritual sites from every zone, with Restored Coffer Key count; tick/cross per character until weekly reset
 - **1.6.2** `/kwtd activities` detective for weekly activities across all zones
 - **1.6.1** Classic recognised as a Timewalking expansion
