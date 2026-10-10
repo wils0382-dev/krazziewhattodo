@@ -195,6 +195,12 @@ function Activities:Collect(settings)
                     if not seen[poiID] then -- the same event shows on several maps
                         local ok2, poi = pcall(C_AreaPoiInfo.GetAreaPOIInfo, zoneID, poiID)
                         local kind = ok2 and poi and KindOf(poi.atlasName, source.name)
+                        -- On your "never show" list (Settings.lua)? Skip it.
+                        if kind then
+                            for hiddenName in pairs(ns.HIDDEN_ACTIVITIES or {}) do
+                                if hiddenName:lower() == Clean(poi.name):lower() then kind = nil end
+                            end
+                        end
                         -- Same name and type under a different marker number? Same activity.
                         local nameKey = kind and (kind .. ":" .. Clean(poi.name):lower())
                         if kind and seenName[nameKey] then

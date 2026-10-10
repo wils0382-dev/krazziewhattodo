@@ -89,6 +89,13 @@ ns.COUNTS_AS = {
 -- or by map marker ID. Find quest IDs with /kwtd turnins after finishing it.
 ns.ACTIVITY_QUESTS = {
     ["Prey"] = { 94446 }, -- the weekly Prey quest
+    ["Saltheril's Soiree"] = { 91966 }, -- the Soiree's weekly hub quest (3 chosen quests hang off it)
+}
+
+-- Activities never to show (no weekly reward, or not interesting). Use the
+-- name as shown in the window (any capitals).
+ns.HIDDEN_ACTIVITIES = {
+    ["Abyss Anglers"] = true, -- repeatable mini-game, no weekly reward
 }
 
 -- Quest tag the game gives an UNLOCKED Special Assignment ("Capstone World Quest")
