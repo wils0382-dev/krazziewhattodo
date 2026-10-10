@@ -91,7 +91,7 @@ local function KindOf(atlas, fromList)
     return nil -- portals, flight points, vendors...
 end
 
-local KIND_ORDER = { ["Bountiful Delve"] = 1, ["Event"] = 2, ["Ritual Site"] = 3, ["Region"] = 4 }
+local KIND_ORDER = { ["Weekly quest"] = 0, ["Bountiful Delve"] = 1, ["Event"] = 2, ["Ritual Site"] = 3, ["Region"] = 4 }
 
 -- Short extra detail for a line (story variant for delves, a reward hint for events)
 local function DetailOf(kind, widgetText)
@@ -173,6 +173,70 @@ function Activities:DelveProgress(settings)
 end
 
 ------------------------------------------------------------
+-- Learning rewards. Krazzie notes every time your gold goes up. When an
+-- activity flips to "done" while you're playing, it waits 5 minutes (time
+-- to open the reward bag) and adds up the gold gained around that moment.
+------------------------------------------------------------
+local LEARN_BEFORE, LEARN_AFTER, KEEP = 120, 300, 5 -- seconds, seconds, samples
+local moneyLog, lastMoney = {}, nil
+
+local moneyWatch = CreateFrame("Frame")
+moneyWatch:RegisterEvent("PLAYER_ENTERING_WORLD")
+moneyWatch:RegisterEvent("PLAYER_MONEY")
+moneyWatch:SetScript("OnEvent", function(_, event)
+    local now = GetMoney()
+    if event == "PLAYER_MONEY" and lastMoney and now > lastMoney then
+        table.insert(moneyLog, { t = time(), g = now - lastMoney })
+        while moneyLog[1] and moneyLog[1].t < time() - 900 do table.remove(moneyLog, 1) end -- keep 15 min
+    end
+    lastMoney = now
+end)
+
+local function GoldGainedAround(at)
+    local total = 0
+    for _, m in ipairs(moneyLog) do
+        if m.t >= at - LEARN_BEFORE and m.t <= at + LEARN_AFTER then total = total + m.g end
+    end
+    return total
+end
+
+local function RewardsDB()
+    local db = ns.GetDB()
+    db.account.activityRewards = db.account.activityRewards or {}
+    return db.account.activityRewards
+end
+
+local function Learn(name, at)
+    local gold = GoldGainedAround(at)
+    local db = RewardsDB()
+    local entry = db[name] or { samples = {} }
+    table.insert(entry.samples, 1, { gold = gold, at = at })
+    while #entry.samples > KEEP do table.remove(entry.samples) end
+    db[name] = entry
+    ns.Say(("Learned: %s paid about %s this time."):format(name, GetCoinTextureString(gold)))
+end
+
+-- The typical gold an activity pays: the middle of its recent results
+function Activities:TypicalGold(name)
+    local entry = RewardsDB()[name]
+    if not entry or #entry.samples == 0 then return nil end
+    local values = {}
+    for _, s in ipairs(entry.samples) do table.insert(values, s.gold) end
+    table.sort(values)
+    return values[math.ceil(#values / 2)]
+end
+
+-- Watches for an activity flipping from open to done during this session
+local wasDone = {}
+local function WatchCompletion(name, done)
+    if done and wasDone[name] == false then
+        local at = time()
+        C_Timer.After(LEARN_AFTER + 5, function() Learn(name, at) end)
+    end
+    wasDone[name] = done
+end
+
+------------------------------------------------------------
 -- Collect everything on the map this week
 ------------------------------------------------------------
 function Activities:Collect(settings)
@@ -227,11 +291,29 @@ function Activities:Collect(settings)
                                 choice = self:GetChoice(key),
                                 done = IsDone(Clean(poi.name), poiID),
                             })
+                            local added = result.list[#result.list]
+                            WatchCompletion(added.name, added.done)
                         end
                     end
                 end
             end
         end
+    end
+
+    -- Weekly quests you pick up from someone (Settings.lua)
+    for _, p in ipairs(ns.WEEKLY_PICKUPS or {}) do
+        local done, inLog = false, false
+        for _, questID in ipairs(p.quests or {}) do
+            if C_QuestLog.IsQuestFlaggedCompleted(questID) then done = true end
+            if C_QuestLog.GetLogIndexForQuestID(questID) then inLog = true end
+        end
+        local key = "pickup:" .. p.name
+        WatchCompletion(p.name, done)
+        table.insert(result.list, {
+            key = key, kind = "Weekly quest", zoneID = p.zone or 2393, name = p.name,
+            detail = (not done) and (inLog and "in progress" or ("from " .. (p.giver or "?"))) or nil,
+            choice = self:GetChoice(key), done = done,
+        })
     end
 
     -- Picks first, then open ones, then done, then skipped; then by kind and name
@@ -274,6 +356,12 @@ function Activities:Format(a)
     local extra = ns.ZoneName(a.zoneID)
     if a.detail then extra = extra .. " \194\183 " .. a.detail end
     local text = ("|cffb0b0ff[%s]|r %s |cff888888(%s)|r"):format(a.kind, a.name, extra)
+    -- What it typically pays, learned from your own completions
+    local typical = self:TypicalGold(a.name)
+    if typical and typical >= 10000 then
+        local gold = math.floor(typical / 10000)
+        text = text .. " |cffffd100~" .. (BreakUpLargeNumbers and BreakUpLargeNumbers(gold) or gold) .. "g|r"
+    end
     if a.choice == "yes" then text = text .. " |cff66ccffYour pick|r" end
     if a.choice == "no" then
         text = "|cff888888" .. Clean(text) .. " (skipped this week)|r"

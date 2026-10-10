@@ -125,6 +125,34 @@ Fits the existing account/character settings layers. Would live on its own tab i
 2. Build a small, hand-checked list of weekly activities (name, quest IDs, zone, account-wide or not).
 3. "Weekly activities" section in the window, using the three modes.
 
+## Wish list: alts with a purpose (filed for later)
+
+**The problem:** with more alts, it's tempting to run the same to-do list on every one, but some activities stop giving anything useful to some characters. Krazzie should know what each alt is *for*, and only show what serves that.
+
+### 1. Rough rewards per activity
+
+So activities can be judged by priorities, e.g. gold first on gold-farming alts.
+
+- **Built in 1.9.0 (gold only).** **Learned automatically:** when an activity is marked done, note how much gold (and key currencies) went up over the next few minutes, which covers opening a reward bag. Over a week or two Krazzie knows "the Soiree pays roughly X gold" from James's own play.
+- **Notes list as backup:** a hand-filled `ACTIVITY_REWARDS` table in Settings.lua for anything that can't be learned.
+- James's observations: the Soiree's reward bag paid a good chunk of gold. The AI summary claimed a large-gold "Pinnacle weekly" from Lady Liadrin; not found in game so far (may need unlocking, or be something else). Treat AI reward numbers as unverified.
+
+### 2. Gearing advisor
+
+Tell a character where its best item-level gains are right now, e.g. *"Bountiful delves at tier 8+ give you upgrades; tier 5 no longer does."*
+
+- Compare the character's item level (`GetAverageItemLevel`, plus per-slot levels Krazzie already reads) with what each source drops: delve tiers (bountiful chests and vault), Prey difficulties, world quests, dungeons.
+- Needs a small per-season table: "tier / difficulty -> item level". Short, but needs updating each season.
+- World quest gear is already judged per slot; this extends the same idea to weekly sources.
+
+### 3. Alt purposes (ties it together)
+
+Each character gets a purpose: **Gold farming**, **Gearing**, **Collecting**, or a custom mix.
+
+- Builds on "Focus presets" (section 4): a purpose is a preset of priorities, activity modes and gear rules.
+- Activities that no longer serve a character's purpose drop off by themselves (gear below their level, capped currencies, collectibles already owned).
+- Per character, using the existing account/character settings layers.
+
 ## Idea: settings redesign (filed for later)
 
 The settings panel keeps getting longer. Plan:

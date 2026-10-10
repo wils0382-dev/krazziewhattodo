@@ -92,6 +92,13 @@ ns.ACTIVITY_QUESTS = {
     ["Saltheril's Soiree"] = { 91966 }, -- the Soiree's weekly hub quest (3 chosen quests hang off it)
 }
 
+-- Weekly quests you pick up from someone (not shown on the map until you have them).
+-- Shown in "This week's activities": where to get it, in progress, or done this week.
+-- If the quest rotates each week, add each week's ID to the same line.
+ns.WEEKLY_PICKUPS = {
+    { name = "Trailing Xal'atath", quests = { 98172 }, giver = "Lady Liadrin", zone = 2393 },
+}
+
 -- Activities never to show (no weekly reward, or not interesting). Use the
 -- name as shown in the window (any capitals).
 ns.HIDDEN_ACTIVITIES = {

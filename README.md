@@ -64,6 +64,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - Delves come from `C_AreaPoiInfo.GetDelvesForMap`; bountiful ones have atlas `delves-bountiful` (regular: `delves-regular`). Their tooltip shows Restored Coffer Keys held and the story variant.
 - Weekly events have their own map markers (`C_AreaPoiInfo.GetEventsForMap`), e.g. Saltheril's Soiree (POI 8600), Abyss Anglers (8584), Legends of the Haranir (8423), Stormarion Assault (8419), Abundance (rotating, e.g. 8526 "Mining Voidburrow", bountiful variant `UI-EventPoi-abundancebountiful`), Prey (8742), Void Incursion (8757, region-wide progress). Ritual Sites are area markers with atlas `Ritual-Sites-Map-Icon`.
 - Prey's weekly quest is 94446 (found by James; to confirm). Prey can appear under more than one map marker, so activities are merged and linked by name.
+- Lady Liadrin (Silvermoon) gives "Trailing Xal'atath" (98172); possibly a rotating weekly, to confirm.
 - Abyss Anglers (Zul'Aman) is a repeatable mini-game with no weekly reward.
 - Saltheril's Soiree: weekly hub quest 91966 (from Wowhead); the three quests you choose under it change weekly. To confirm: is 91966 complete on pickup or only at the end? `/kwtd mark` / `/kwtd diff` finds these.
 - Some repeatable quests (e.g. Vaults of Atal'Utek Temple Patrols) reappear on the map after hand-in without being flagged completed; Krazzie hides anything handed in since the daily reset, using its own turn-in record. Activities are linked to their "done" quests in `ns.ACTIVITY_QUESTS`.
@@ -94,6 +95,7 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.9.0** Learned rewards: gold gained around each activity's completion, typical amount shown on its line; weekly pick-up quests (`ns.WEEKLY_PICKUPS`), starting with Trailing Xal'atath from Lady Liadrin
 - **1.8.3** "Never show" list for activities (`ns.HIDDEN_ACTIVITIES`); Abyss Anglers hidden (no weekly reward)
 - **1.8.2** Saltheril's Soiree linked to its weekly hub quest (91966)
 - **1.8.1** `/kwtd mark` and `/kwtd diff` to find hidden tracking quests behind weekly events
