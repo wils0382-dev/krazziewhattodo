@@ -103,6 +103,14 @@ Source: an AI-generated summary James gathered. **Treat its numbers and details 
 | Profession weeklies | Quests | Filter by the character's professions (`GetProfessions`). |
 | Prey weekly (Garden Variety Sacrifices, Renown 4) | Quest | Unlock-dependent; check availability/completion by quest ID. |
 
+### Detective results (1.6.2) and first build (1.7.0)
+
+- **Bountiful Delves:** `GetDelvesForMap`, atlas `delves-bountiful`. Tooltip has Restored Coffer Keys held, shards, story variant, time left.
+- **Events:** `GetEventsForMap`. Soiree, Abyss Anglers, Legends of the Haranir, Stormarion Assault, Abundance (rotates; bountiful variant gives a Restored Coffer Key), Prey, Void Incursion (region progress bar).
+- **Ritual Sites:** area markers, atlas `Ritual-Sites-Map-Icon`, award Field Accolades.
+- **Not found:** Liadrin's Pinnacle weekly and A Call to Delves.
+- **1.7.0** lists all of the above in a "This week's activities" section with tick/cross (cross = skip until weekly reset). Completion isn't detected yet: needs each event's weekly quest ID.
+
 ### The core design: three modes per activity, per character
 
 - **Always**: chase it on this character regardless (e.g. the Pinnacle weekly on every toon).

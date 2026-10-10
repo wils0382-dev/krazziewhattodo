@@ -40,6 +40,7 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `Window.lua` | The main window |
 | `SettingsPanel.lua` | The settings panel beside the window |
 | `Alts.lua` | Per-character snapshots and the Alts panel |
+| `Activities.lua` | This week's activities: bountiful delves, events, ritual sites |
 | `Events.lua` | Event goals, read from All The Things |
 | `Broker.lua` | Titan Panel and minimap icon |
 | `Core.lua` | Start-up, auto-refresh and slash commands |
@@ -58,6 +59,9 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - The in-game calendar's holiday IDs differ from ATT's (Brewfest: calendar 372, ATT 7), but the names match, so events are linked by name.
 - Repeatable quests (weeklies, Prey, raid/dungeon quests) appear in `C_TaskQuest.GetQuestsOnMap` alongside world quests, only when unlocked, and their rewards can be read before accepting them.
 - The calendar lists a holiday on its last day even after it ends; check `endTime`.
+- Delves come from `C_AreaPoiInfo.GetDelvesForMap`; bountiful ones have atlas `delves-bountiful` (regular: `delves-regular`). Their tooltip shows Restored Coffer Keys held and the story variant.
+- Weekly events have their own map markers (`C_AreaPoiInfo.GetEventsForMap`), e.g. Saltheril's Soiree (POI 8600), Abyss Anglers (8584), Legends of the Haranir (8423), Stormarion Assault (8419), Abundance (rotating, e.g. 8526 "Mining Voidburrow", bountiful variant `UI-EventPoi-abundancebountiful`), Prey (8742), Void Incursion (8757, region-wide progress). Ritual Sites are area markers with atlas `Ritual-Sites-Map-Icon`.
+- No "Pinnacle weekly" from Lady Liadrin or "A Call to Delves" quest was found in game (the AI summary was wrong or they need unlocking).
 - Silvermoon City world quests count towards Eversong Woods' unlock.
 - Zone map IDs: Eversong Woods 2395, Zul'Aman 2437, Harandar 2413, Voidstorm 2405, Silvermoon City 2393, The Coiled Isle 2512, Vaults of Atal'Utek 2509.
 
@@ -79,10 +83,12 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 - [ ] Off-hand comparison for dual-wielders
 - [ ] Map events (e.g. Saltheril's Soiree, Void incursions)
 - [x] Repeatable/weekly quests on the map, judged by your rules
-- [ ] Other weekly activities (e.g. Saltheril's Soiree, Bountiful Delve gilded rewards)
+- [x] Weekly activities on the map: bountiful delves, events, ritual sites
+- [ ] Weekly activity modes per character (Always / If worth it / Off) and completion detection
 
 ## Version history
 
+- **1.7.0** "This week's activities" section: bountiful delves, events and ritual sites from every zone, with Restored Coffer Key count; tick/cross per character until weekly reset
 - **1.6.2** `/kwtd activities` detective for weekly activities across all zones
 - **1.6.1** Classic recognised as a Timewalking expansion
 - **1.6.0** Repeatable quests on the map (weeklies, raid/dungeon quests, Prey...) judged like world quests; events disappear when they end; Timewalking shows only the running expansion plus a total

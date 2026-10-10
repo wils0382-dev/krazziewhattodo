@@ -15,6 +15,7 @@ ns.DEFAULTS = {
     -- Order of the window's sections, top first
     sectionOrder = {
         "weekly", -- "This week": weekly quests in your log
+        "activities", -- this week's activities: bountiful delves, events, ritual sites
         "zones",  -- world quests, grouped by zone
         "events", -- running holidays (needs All The Things)
     },
@@ -43,6 +44,7 @@ ns.DEFAULTS = {
     showMinimap      = true,  -- show the minimap button
     showWeeklies     = true,  -- show weekly quests from your quest log at the top
     showRepeatables  = true,  -- include repeatable quests on the map (weeklies, raid/dungeon quests...)
+    showActivities   = true,  -- show this week's activities (bountiful delves, events, ritual sites)
     respectCaps      = true,  -- stop chasing currencies you've capped this week (or are full on)
     emptySlotUpgrades = true, -- gear for a slot with nothing equipped counts as an upgrade
 

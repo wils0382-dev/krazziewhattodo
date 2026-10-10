@@ -318,6 +318,38 @@ function Window:Render(result, keepScroll)
         end
     end
 
+    -- SECTION: this week's activities (bountiful delves, events, ritual sites)
+    local function DrawActivities()
+        local acts = result.activities
+        if not acts or #acts.list == 0 then return end
+        local open = 0
+        for _, a in ipairs(acts.list) do
+            if a.choice ~= "no" then open = open + 1 end
+        end
+        if not Heading("activities", "This week's activities", "(" .. open .. ")") then return end
+        if acts.keys then
+            Add(("|cffaaaaaaRestored Coffer Keys: |r%d"):format(acts.keys), 16)
+        end
+        for _, a in ipairs(acts.list) do
+            if a.choice ~= "no" or showAll then
+                questCount = questCount + 1
+                local b = GetButtons(questCount)
+                local key = a.key
+                b.yes:ClearAllPoints()
+                b.yes:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -y)
+                b.no:ClearAllPoints()
+                b.no:SetPoint("LEFT", b.yes, "RIGHT", 4, 0)
+                b.yes:SetAlpha(a.choice == "yes" and 1 or 0.3)
+                b.no:SetAlpha(a.choice == "no" and 1 or 0.3)
+                b.yes:SetScript("OnClick", function() ns.Activities:SetChoice(key, "yes"); Window:Refresh(true) end)
+                b.no:SetScript("OnClick", function() ns.Activities:SetChoice(key, "no"); Window:Refresh(true) end)
+                b.yes:Show()
+                b.no:Show()
+                Add(ns.Activities:Format(a), 46)
+            end
+        end
+    end
+
     -- SECTION: running events (from All The Things), one line per activity
     local function DrawEvents()
         for _, event in ipairs(result.events or {}) do
@@ -377,8 +409,8 @@ function Window:Render(result, keepScroll)
     end
 
     -- Draw the sections in your chosen order
-    local DRAW = { weekly = DrawWeekly, zones = DrawZones, events = DrawEvents }
-    for _, section in ipairs(settings.sectionOrder or { "weekly", "zones", "events" }) do
+    local DRAW = { weekly = DrawWeekly, activities = DrawActivities, zones = DrawZones, events = DrawEvents }
+    for _, section in ipairs(settings.sectionOrder or { "weekly", "activities", "zones", "events" }) do
         if DRAW[section] then DRAW[section]() end
     end
 
