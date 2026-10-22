@@ -100,6 +100,7 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.9.5** Completed activities hidden by default (Settings: Show completed activities); completed lines get a green tick
 - **1.9.4** Activity links can match quest names ("Fortify the Runestones" covers every faction's version); turn-in records note which character handed in
 - **1.9.3** Fix: Blizzard removed the old `GetCoinTextureString`; gold now shown via `ns.Coin` (uses `C_CurrencyInfo.GetCoinTextureString`)
 - **1.9.2** Fix: learned-reward tidy-up could error and leave the window stuck scanning; errors are now reported in chat and can't blank the whole window

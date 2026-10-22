@@ -45,6 +45,7 @@ ns.DEFAULTS = {
     showWeeklies     = true,  -- show weekly quests from your quest log at the top
     showRepeatables  = true,  -- include repeatable quests on the map (weeklies, raid/dungeon quests...)
     showActivities   = true,  -- show this week's activities (bountiful delves, events, ritual sites)
+    showDoneActivities = false, -- keep completed activities in the list (with a green tick)
     showBountifulDelves = false, -- list each bountiful delve individually (the progress line is always shown)
     delveTier = 11,  -- delve tier that counts towards your weekly delve goal
     delveGoal = 4,   -- how many delves at that tier (or higher) you want each week

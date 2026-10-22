@@ -92,6 +92,9 @@ local function KindOf(atlas, fromList)
     return nil -- portals, flight points, vendors...
 end
 
+-- A small green tick, shown in front of completed lines
+local DONE_TICK = "|TInterface\\RaidFrame\\ReadyCheck-Ready:12|t "
+
 local KIND_ORDER = { ["Weekly quest"] = 0, ["Bountiful Delve"] = 1, ["Event"] = 2, ["Ritual Site"] = 3, ["Region"] = 4 }
 
 -- Short extra detail for a line (story variant for delves, a reward hint for events)
@@ -406,7 +409,7 @@ function Activities:DelveLine(delves, keys)
     end
     if keys then table.insert(parts, "Restored Coffer Keys: " .. keys) end
     local text = table.concat(parts, dot)
-    if done then return "|cff888888" .. text .. " (done this week)|r", true end
+    if done then return DONE_TICK .. "|cff888888" .. text .. " (done this week)|r", true end
     return text, false
 end
 
@@ -425,7 +428,7 @@ function Activities:Format(a)
     if a.choice == "no" then
         text = "|cff888888" .. Clean(text) .. " (skipped this week)|r"
     elseif a.done then
-        text = "|cff888888" .. Clean(text) .. " (done this week)|r"
+        text = DONE_TICK .. "|cff888888" .. Clean(text) .. " (done this week)|r"
     end
     return text
 end
