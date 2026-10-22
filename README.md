@@ -27,6 +27,8 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `/kwtd activities` | Record every zone's markers, events and delves, plus your quest log with IDs (to the save file) |
 | `/kwtd turnins` | The last 20 quests you handed in, with their IDs (Krazzie records the last 50) |
 | `/kwtd mark` then `/kwtd diff` | List every quest completed in between, including hidden tracking quests (no /reload in between) |
+| `/kwtd paid <gold> <name>` | Record what an activity paid, e.g. `/kwtd paid 2000 saltheril's soiree` |
+| `/kwtd unlearn [name]` | Remove the latest learned reward, or clear one activity's results |
 | `/kwtd debug` | Record hidden quest and map-marker labels for the current zone to the save file |
 
 ## Files
@@ -65,10 +67,13 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - Weekly events have their own map markers (`C_AreaPoiInfo.GetEventsForMap`), e.g. Saltheril's Soiree (POI 8600), Abyss Anglers (8584), Legends of the Haranir (8423), Stormarion Assault (8419), Abundance (rotating, e.g. 8526 "Mining Voidburrow", bountiful variant `UI-EventPoi-abundancebountiful`), Prey (8742), Void Incursion (8757, region-wide progress). Ritual Sites are area markers with atlas `Ritual-Sites-Map-Icon`.
 - Prey's weekly quest is 94446 (found by James; to confirm). Prey can appear under more than one map marker, so activities are merged and linked by name.
 - Lady Liadrin (Silvermoon) gives "Trailing Xal'atath" (98172); possibly a rotating weekly, to confirm.
+- Soiree reputation is once per week per account; its gold bag pays on every alt (~2,000g observed). Hard Prey's Veteran Chest: ~175g plus 279 ilvl gear (observed).
 - Abyss Anglers (Zul'Aman) is a repeatable mini-game with no weekly reward.
+- The Soiree's gold quest is "Fortify the Runestones: <faction>" (Farstriders: 90575); one version per faction (Blood Knights, Farstriders, Magisters, Shades), so it's linked by name.
 - Saltheril's Soiree: weekly hub quest 91966 (from Wowhead); the three quests you choose under it change weekly. To confirm: is 91966 complete on pickup or only at the end? `/kwtd mark` / `/kwtd diff` finds these.
 - Some repeatable quests (e.g. Vaults of Atal'Utek Temple Patrols) reappear on the map after hand-in without being flagged completed; Krazzie hides anything handed in since the daily reset, using its own turn-in record. Activities are linked to their "done" quests in `ns.ACTIVITY_QUESTS`.
 - No "Pinnacle weekly" from Lady Liadrin or "A Call to Delves" quest was found in game (the AI summary was wrong or they need unlocking).
+- A patch removed the global `GetCoinTextureString`; use `C_CurrencyInfo.GetCoinTextureString` (wrapped in `ns.Coin`).
 - Silvermoon City world quests count towards Eversong Woods' unlock.
 - Zone map IDs: Eversong Woods 2395, Zul'Aman 2437, Harandar 2413, Voidstorm 2405, Silvermoon City 2393, The Coiled Isle 2512, Vaults of Atal'Utek 2509.
 
@@ -95,6 +100,10 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **1.9.4** Activity links can match quest names ("Fortify the Runestones" covers every faction's version); turn-in records note which character handed in
+- **1.9.3** Fix: Blizzard removed the old `GetCoinTextureString`; gold now shown via `ns.Coin` (uses `C_CurrencyInfo.GetCoinTextureString`)
+- **1.9.2** Fix: learned-reward tidy-up could error and leave the window stuck scanning; errors are now reported in chat and can't blank the whole window
+- **1.9.1** Learned rewards no longer overlap between activities; `/kwtd paid` and `/kwtd unlearn`; weekly activities only shown at max level
 - **1.9.0** Learned rewards: gold gained around each activity's completion, typical amount shown on its line; weekly pick-up quests (`ns.WEEKLY_PICKUPS`), starting with Trailing Xal'atath from Lady Liadrin
 - **1.8.3** "Never show" list for activities (`ns.HIDDEN_ACTIVITIES`); Abyss Anglers hidden (no weekly reward)
 - **1.8.2** Saltheril's Soiree linked to its weekly hub quest (91966)

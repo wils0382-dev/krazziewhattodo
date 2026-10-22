@@ -32,8 +32,9 @@ local function IsDone(name, poiID)
     for link, questIDs in pairs(ns.ACTIVITY_QUESTS) do
         local matches = (link == poiID) or (type(link) == "string" and link:lower() == wanted)
         if matches then
-            for _, questID in ipairs(questIDs) do
-                if C_QuestLog.IsQuestFlaggedCompleted(questID) then return true end
+            for _, link in ipairs(questIDs) do
+                if type(link) == "number" and C_QuestLog.IsQuestFlaggedCompleted(link) then return true end
+                if type(link) == "string" and ns.HandedInThisWeek(link) then return true end
             end
         end
     end
@@ -192,33 +193,46 @@ moneyWatch:SetScript("OnEvent", function(_, event)
     lastMoney = now
 end)
 
-local function GoldGainedAround(at)
+local function GoldGainedBetween(from, to)
     local total = 0
     for _, m in ipairs(moneyLog) do
-        if m.t >= at - LEARN_BEFORE and m.t <= at + LEARN_AFTER then total = total + m.g end
+        if m.t >= from and m.t <= to then total = total + m.g end
     end
     return total
 end
 
+-- Learned results are stored by lower-case name, so capitals never matter
 local function RewardsDB()
     local db = ns.GetDB()
     db.account.activityRewards = db.account.activityRewards or {}
-    return db.account.activityRewards
+    local rewards = db.account.activityRewards
+    -- Tidy older entries saved with capitals. Find them first, then change them:
+    -- adding entries while reading through the same list can cause an error.
+    local toRename = {}
+    for name in pairs(rewards) do
+        if type(name) == "string" and name ~= name:lower() then table.insert(toRename, name) end
+    end
+    for _, name in ipairs(toRename) do
+        rewards[name:lower()] = rewards[name:lower()] or rewards[name]
+        rewards[name] = nil
+    end
+    return rewards
 end
 
-local function Learn(name, at)
-    local gold = GoldGainedAround(at)
+local function AddSample(name, gold, at, manual)
     local db = RewardsDB()
-    local entry = db[name] or { samples = {} }
-    table.insert(entry.samples, 1, { gold = gold, at = at })
+    local key = name:lower()
+    local entry = db[key] or { samples = {} }
+    entry.label = name
+    table.insert(entry.samples, 1, { gold = gold, at = at, manual = manual or nil })
     while #entry.samples > KEEP do table.remove(entry.samples) end
-    db[name] = entry
-    ns.Say(("Learned: %s paid about %s this time."):format(name, GetCoinTextureString(gold)))
+    db[key] = entry
+    ns.GetDB().lastLearned = key
 end
 
 -- The typical gold an activity pays: the middle of its recent results
 function Activities:TypicalGold(name)
-    local entry = RewardsDB()[name]
+    local entry = RewardsDB()[(name or ""):lower()]
     if not entry or #entry.samples == 0 then return nil end
     local values = {}
     for _, s in ipairs(entry.samples) do table.insert(values, s.gold) end
@@ -226,12 +240,54 @@ function Activities:TypicalGold(name)
     return values[math.ceil(#values / 2)]
 end
 
--- Watches for an activity flipping from open to done during this session
-local wasDone = {}
+-- /kwtd paid 2000 saltheril's soiree
+function Activities:RecordPaid(gold, name)
+    if not gold or not name or name == "" then
+        ns.Say("Usage: /kwtd paid <gold> <activity name>, e.g. /kwtd paid 2000 saltheril's soiree")
+        return
+    end
+    AddSample(name, gold * 10000, time(), true)
+    ns.Say(("Recorded: %s paid %s."):format(name, ns.Coin(gold * 10000)))
+end
+
+-- /kwtd unlearn [name]: no name = remove the most recent result; a name = clear that activity
+function Activities:Unlearn(name)
+    local db = RewardsDB()
+    if name and name ~= "" then
+        if db[name:lower()] then
+            db[name:lower()] = nil
+            ns.Say("Cleared everything learned about " .. name .. ".")
+        else
+            ns.Say("Nothing learned about '" .. name .. "'.")
+        end
+        return
+    end
+    local key = ns.GetDB().lastLearned
+    local entry = key and db[key]
+    if entry and #entry.samples > 0 then
+        table.remove(entry.samples, 1)
+        ns.Say("Removed the latest result for " .. (entry.label or key) .. ".")
+    else
+        ns.Say("Nothing recent to remove.")
+    end
+end
+
+-- Watches for an activity flipping from open to done during this session.
+-- Each gold gain is credited to one activity only: a new completion closes
+-- the previous one's window, and can't reach back before it.
+local wasDone, pending, lastFlipAt = {}, nil, 0
 local function WatchCompletion(name, done)
     if done and wasDone[name] == false then
         local at = time()
-        C_Timer.After(LEARN_AFTER + 5, function() Learn(name, at) end)
+        if pending and pending.to > at then pending.to = at end -- stop crediting the earlier one
+        local window = { name = name, from = math.max(at - LEARN_BEFORE, lastFlipAt), to = at + LEARN_AFTER }
+        pending, lastFlipAt = window, at
+        C_Timer.After(LEARN_AFTER + 5, function()
+            local gold = GoldGainedBetween(window.from, window.to)
+            AddSample(window.name, gold, at)
+            ns.Say(("Learned: %s paid about %s this time. Wrong? /kwtd unlearn"):format(
+                window.name, ns.Coin(gold)))
+        end)
     end
     wasDone[name] = done
 end
@@ -242,6 +298,9 @@ end
 function Activities:Collect(settings)
     local result = { list = {}, keys = nil }
     if not settings.showActivities then return result end
+    -- Weekly activities are max-level content: hide them on lower-level characters
+    local maxLevel = (GetMaxLevelForPlayerExpansion and GetMaxLevelForPlayerExpansion()) or 90
+    if UnitLevel("player") < (settings.activitiesMinLevel or maxLevel) then return result end
     result.delves = self:DelveProgress(settings)
     if not C_AreaPoiInfo then return result end
 

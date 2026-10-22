@@ -431,6 +431,7 @@ function ns.RecordTurnIn(questID)
         zone  = mapID and ns.ZoneName(mapID) or "?",
         time  = date("%Y-%m-%d %H:%M"),
         at    = time(), -- for "handed in since the last daily reset"
+        char  = ns.CharKey(), -- who handed it in
     })
     while #db.turnins > MAX_TURNINS do table.remove(db.turnins) end
 end
@@ -454,6 +455,22 @@ function ns.TurnedInToday()
         if at and at >= lastReset then done[t.id] = true end
     end
     return done
+end
+
+-- Has THIS character handed in a quest whose name starts with this text
+-- since the weekly reset?
+function ns.HandedInThisWeek(namePrefix)
+    local untilReset = (C_DateAndTime and C_DateAndTime.GetSecondsUntilWeeklyReset
+        and C_DateAndTime.GetSecondsUntilWeeklyReset()) or 0
+    local lastReset = time() + untilReset - 7 * 24 * 60 * 60
+    local me, wanted = ns.CharKey(), namePrefix:lower()
+    for _, t in ipairs(ns.GetDB().turnins or {}) do
+        if t.char == me and (t.at or 0) >= lastReset
+           and tostring(t.title or ""):lower():find(wanted, 1, true) == 1 then
+            return true
+        end
+    end
+    return false
 end
 
 function ns.ShowTurnIns()

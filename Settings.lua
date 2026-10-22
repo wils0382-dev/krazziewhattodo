@@ -48,6 +48,7 @@ ns.DEFAULTS = {
     showBountifulDelves = false, -- list each bountiful delve individually (the progress line is always shown)
     delveTier = 11,  -- delve tier that counts towards your weekly delve goal
     delveGoal = 4,   -- how many delves at that tier (or higher) you want each week
+    activitiesMinLevel = nil, -- show weekly activities from this level (nil = max level only)
     respectCaps      = true,  -- stop chasing currencies you've capped this week (or are full on)
     emptySlotUpgrades = true, -- gear for a slot with nothing equipped counts as an upgrade
 
@@ -87,9 +88,13 @@ ns.COUNTS_AS = {
 -- Weekly activities and the quest(s) that mean "done this week".
 -- Link by the activity's name as shown in the window (any capitals),
 -- or by map marker ID. Find quest IDs with /kwtd turnins after finishing it.
+-- In the list, a NUMBER is a quest ID; TEXT means "this character handed in a
+-- quest whose name starts with this text since the weekly reset" (handy when
+-- a quest has several versions, e.g. one per faction).
 ns.ACTIVITY_QUESTS = {
     ["Prey"] = { 94446 }, -- the weekly Prey quest
-    ["Saltheril's Soiree"] = { 91966 }, -- the Soiree's weekly hub quest (3 chosen quests hang off it)
+    -- Hub quest, the Farstriders version of the gold quest, and any faction's version by name
+    ["Saltheril's Soiree"] = { 91966, 90575, "Fortify the Runestones" },
 }
 
 -- Weekly quests you pick up from someone (not shown on the map until you have them).
@@ -124,4 +129,27 @@ ns.SLOTS = {
 -- Chat message with our coloured prefix
 function ns.Say(msg)
     print("|cffff9900Krazzie:|r " .. msg)
+end
+
+-- Copper as money text, e.g. "1,234g 56s" with coin icons.
+-- Blizzard moved this function in a patch, so try the new home, then the old
+-- one, then write it out plainly. If it moves again, this is the only place to fix.
+function ns.Coin(copper)
+    copper = copper or 0
+    if C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString then
+        return C_CurrencyInfo.GetCoinTextureString(copper)
+    end
+    if GetCoinTextureString then return GetCoinTextureString(copper) end
+    local gold = math.floor(copper / 10000)
+    local silver = math.floor((copper % 10000) / 100)
+    return (BreakUpLargeNumbers and BreakUpLargeNumbers(gold) or gold) .. "g " .. silver .. "s"
+end
+
+-- Report an error once per session (so it can't flood chat), and carry on
+local reported = {}
+function ns.ReportError(where, err)
+    local text = tostring(err)
+    if reported[text] then return end
+    reported[text] = true
+    ns.Say(("|cffff6666hit a problem in %s:|r %s"):format(where, text))
 end
