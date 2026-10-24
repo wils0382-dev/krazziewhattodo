@@ -80,7 +80,7 @@ function Plan:Build(result, settings)
         if minIlvl and ilvl < minIlvl and not c.pinned then
             table.insert(notYet, c)
         else
-            c.values = {}
+            c.values, c.ilvl = {}, ilvl
             c.values.gold, c.goldSource = GoldFor(c)
             -- Transmog, mounts and other collectibles join here in stage 2
             table.insert(ranked, c)
@@ -134,6 +134,18 @@ function Plan:Line(i, c)
         text = text .. "  |cff888888(little gold)|r"
     else
         text = text .. "  |cff888888(value unknown yet)|r"
+    end
+    -- Difficulty advice (e.g. Prey): the easiest difficulty whose drops beat your item level
+    local diffs = c.profile.difficulties
+    if diffs and c.ilvl then
+        local advice
+        for _, d in ipairs(diffs) do
+            if d.drops > c.ilvl then
+                advice = ("upgrades from %s (%d %s)"):format(d.name, d.drops, d.track or "")
+                break
+            end
+        end
+        text = text .. " |cff00ff00" .. (advice or "no gear upgrades (crests only)") .. "|r"
     end
     if c.pinned then text = text .. " |cff66ccffYour pick|r" end
     return text

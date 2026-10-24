@@ -93,15 +93,19 @@ ns.COUNTS_AS = {
 }
 
 -- Weekly activities and the quest(s) that mean "done this week".
--- Link by the activity's name as shown in the window (any capitals),
--- or by map marker ID. Find quest IDs with /kwtd turnins after finishing it.
+-- Link by how the activity's name STARTS in the window (any capitals) - so
+-- "Abundance" covers "Abundance: Mining Voidburrow" - or by map marker ID. Find quest IDs with /kwtd turnins after finishing it.
 -- In the list, a NUMBER is a quest ID; TEXT means "this character handed in a
 -- quest whose name starts with this text since the weekly reset" (handy when
 -- a quest has several versions, e.g. one per faction).
 ns.ACTIVITY_QUESTS = {
     ["Prey"] = { 94446 }, -- the weekly Prey quest
-    -- Hub quest, the Farstriders version of the gold quest, and any faction's version by name
-    ["Saltheril's Soiree"] = { 91966, 90575, "Fortify the Runestones" },
+    -- The four "Fortify the Runestones" quests (one per faction), plus a name match as backup
+    ["Saltheril's Soiree"] = { 90573, 90574, 90575, 90576, "Fortify the Runestones" },
+    ["Abundance"] = { 89507 },          -- Abundant Offerings
+    ["Stormarion Assault"] = { 94581 },
+    -- The seven Legends weeklies (92719 assumed: noted as 19719, which looked like a typo)
+    ["Legends of the Haranir"] = { 92716, 92719, 92720, 92721, 92722, 92724, 92725 },
 }
 
 -- Weekly quests you pick up from someone (not shown on the map until you have them).

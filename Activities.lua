@@ -30,7 +30,8 @@ end
 local function IsDone(name, poiID)
     local wanted = (name or ""):lower()
     for link, questIDs in pairs(ns.ACTIVITY_QUESTS) do
-        local matches = (link == poiID) or (type(link) == "string" and link:lower() == wanted)
+        local matches = (link == poiID)
+            or (type(link) == "string" and wanted:find(link:lower(), 1, true) == 1) -- name starts with it
         if matches then
             for _, link in ipairs(questIDs) do
                 if type(link) == "number" and C_QuestLog.IsQuestFlaggedCompleted(link) then return true end
