@@ -103,7 +103,9 @@ ns.ACTIVITY_QUESTS = {
     -- The four "Fortify the Runestones" quests (one per faction), plus a name match as backup
     ["Saltheril's Soiree"] = { 90573, 90574, 90575, 90576, "Fortify the Runestones" },
     ["Abundance"] = { 89507 },          -- Abundant Offerings
-    ["Stormarion Assault"] = { 94581 },
+    -- Several quests all named "Stormarion Assault" are handed in during one run;
+    -- 94581 (from Wowhead) didn't complete, kept in case it's a later weekly
+    ["Stormarion Assault"] = { 90943, 90962, 91464, 91465, 94581, "Stormarion Assault" },
     -- The seven Legends weeklies (92719 assumed: noted as 19719, which looked like a typo)
     ["Legends of the Haranir"] = { 92716, 92719, 92720, 92721, 92722, 92724, 92725 },
 }

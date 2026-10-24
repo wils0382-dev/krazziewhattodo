@@ -71,7 +71,7 @@ Saved data lives in `WTF\Account\<account>\SavedVariables\KrazzieWhatToDo.lua`.
 - Lady Liadrin (Silvermoon) gives "Trailing Xal'atath" (98172); possibly a rotating weekly, to confirm.
 - Soiree reputation is once per week per account; its gold bag pays on every alt (~2,000g observed). Hard Prey's Veteran Chest: ~175g plus 279 ilvl gear (observed).
 - Reward bags (item IDs, via Wowhead): Surplus Bag of Party Favors 268489, Overflowing Abundant Satchel 263466, Avid Learner's Supply Pack 263467, Victorious Stormarion Pinnacle Cache 260940, Preyhunter's Champion Chest 275726, Hero Chest 279574, Apex Cache 279527, Aqir Research Satchel 277283. Several bags have different versions at level 90 and 80-89.
-- Done quests: Soiree 90573-90576 (Fortify the Runestones, one per faction), Abundance 89507 (Abundant Offerings), Stormarion 94581, Legends of the Haranir 92716, 92719 (assumed; noted as 19719), 92720-92722, 92724, 92725.
+- Done quests: Soiree 90573-90576 (Fortify the Runestones, one per faction), Abundance 89507 (Abundant Offerings), Stormarion: four quests named "Stormarion Assault" (90943, 90962, 91464, 91465) handed in during one run; 94581 (Wowhead) did not complete, Legends of the Haranir 92716, 92719 (assumed; noted as 19719), 92720-92722, 92724, 92725.
 - Prey item levels: Normal 266 Adventurer (vault 279), Hard 279 Veteran (vault 292), Nightmare 292 Champion (vault 305).
 - Abyss Anglers (Zul'Aman) is a repeatable mini-game with no weekly reward.
 - The Soiree's gold quest is "Fortify the Runestones: <faction>" (Farstriders: 90575); one version per faction (Blood Knights, Farstriders, Magisters, Shades), so it's linked by name.
@@ -105,6 +105,7 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **2.1.1** Stormarion Assault done-check: the four "Stormarion Assault" quests handed in during a run, plus a name match
 - **2.1.0** Done-quests for Soiree (all four Runestones), Abundance, Stormarion and Legends; activity links match name starts; reward bag IDs in profiles; Prey difficulty advice; Aqir Invasion profile
 - **2.0.0** "Best for this character": activities ranked by your value priorities (weighted or strict, per character), with an item level filter ("Not yet"); activity profiles in ActivityData.lua; learned gold stored per activity profile
 - **1.9.5** Completed activities hidden by default (Settings: Show completed activities); completed lines get a green tick
