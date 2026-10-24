@@ -283,7 +283,9 @@ local function WatchCompletion(name, done)
     if done and wasDone[name] == false then
         local at = time()
         if pending and pending.to > at then pending.to = at end -- stop crediting the earlier one
-        local window = { name = name, from = math.max(at - LEARN_BEFORE, lastFlipAt), to = at + LEARN_AFTER }
+        local profile = ns.ProfileFor and ns.ProfileFor(name)
+        local window = { name = profile and profile.name or name,
+                         from = math.max(at - LEARN_BEFORE, lastFlipAt), to = at + LEARN_AFTER }
         pending, lastFlipAt = window, at
         C_Timer.After(LEARN_AFTER + 5, function()
             local gold = GoldGainedBetween(window.from, window.to)

@@ -2,17 +2,19 @@
 ## Title: |cffff9900Krazzie|r - What to do
 ## Notes: Finds the world quests worth doing for each character.
 ## Author: James
-## Version: 1.9.5
+## Version: 2.0.0
 ## SavedVariables: KrazzieDB
 ## OptionalDeps: MidnightRoutine, Titan, LibDataBroker-1.1, LibDBIcon-1.0, AllTheThings
 
 Settings.lua
+ActivityData.lua
 Profile.lua
 Choices.lua
 Scanner.lua
 Debug.lua
 Events.lua
 Activities.lua
+Plan.lua
 Window.lua
 SettingsPanel.lua
 Alts.lua

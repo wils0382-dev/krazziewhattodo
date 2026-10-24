@@ -135,7 +135,10 @@ So activities can be judged by priorities, e.g. gold first on gold-farming alts.
 
 - **Built in 1.9.0 (gold only).** **Learned automatically:** when an activity is marked done, note how much gold (and key currencies) went up over the next few minutes, which covers opening a reward bag. Over a week or two Krazzie knows "the Soiree pays roughly X gold" from James's own play.
 - **Notes list as backup:** a hand-filled `ACTIVITY_REWARDS` table in Settings.lua for anything that can't be learned.
-- James's observations: the Soiree's reward bag paid a good chunk of gold. The AI summary claimed a large-gold "Pinnacle weekly" from Lady Liadrin; not found in game so far (may need unlocking, or be something else). Treat AI reward numbers as unverified.
+- James's observations:
+  - **Saltheril's Soiree:** reputation only the first time each week (account-wide), but the Surplus Bag of Party Favors (from Fortify the Runestones) paid ~2,000 gold on an alt. A gold-farming weekly for every alt.
+  - **Prey, Hard:** Preyhunter's Veteran Chest gave ~175 gold, a 279 item level ring and some currencies. Gearing data point: Hard Prey = Veteran-track gear around 279.
+  - A single Prey hunt isn't the weekly Prey quest (that seems to need several hunts); individual hunts already show as [Repeatable] map quests with readable rewards. The AI summary claimed a large-gold "Pinnacle weekly" from Lady Liadrin; not found in game so far (may need unlocking, or be something else). Treat AI reward numbers as unverified.
 
 ### 2. Gearing advisor
 
@@ -145,6 +148,14 @@ Tell a character where its best item-level gains are right now, e.g. *"Bountiful
 - Needs a small per-season table: "tier / difficulty -> item level". Short, but needs updating each season.
 - World quest gear is already judged per slot; this extends the same idea to weekly sources.
 
+**Scaling (floor and ceiling).** Many rewards scale with the character's item level, between a floor and a ceiling per source.
+
+- **World quests: already handled.** The game reports the item level the character would actually receive, after scaling.
+- **Chests and bags (Prey, delves, Soiree bag): not previewed.** Three ways to find their range:
+  1. **Upgrade tracks:** gear tooltips show a track and rank (e.g. "Veteran 2/8"), readable via tooltip data. Each track has a fixed item level range, which gives floor and ceiling. (Hard Prey's 279 ring was Veteran-track.)
+  2. **Learn from drops:** record every looted gear item (item level, track, source, the character's average item level at the time). Over a few weeks Krazzie learns each source's range and how it scales.
+  3. **Fixed sources:** some don't scale with the character (e.g. delve loot by tier). A small per-season table covers those.
+
 ### 3. Alt purposes (ties it together)
 
 Each character gets a purpose: **Gold farming**, **Gearing**, **Collecting**, or a custom mix.
@@ -152,6 +163,14 @@ Each character gets a purpose: **Gold farming**, **Gearing**, **Collecting**, or
 - Builds on "Focus presets" (section 4): a purpose is a preset of priorities, activity modes and gear rules.
 - Activities that no longer serve a character's purpose drop off by themselves (gear below their level, capped currencies, collectibles already owned).
 - Per character, using the existing account/character settings layers.
+
+## Ranking: "Best for this character" (stage 1 built in 2.0.0)
+
+- Each activity has a profile (ActivityData.lua): minimum item level, gold estimate, notes. Seeded from an AI table: **unverified**, edit freely.
+- Character item level below an activity's minimum: listed under "Not yet". A ticked (pinned) activity is always ranked.
+- Values per activity: gold (learned > estimate; world quests added up live). **Stage 2:** transmog and other collectibles via ATT (reward bags detective).
+- Ranking mode per account/character: **weighted** (values scaled against the best on offer; each priority counts `weightFalloff` (0.5) of the one above) or **strict** (first priority wins; the next breaks ties).
+- Stage 3: settings redesign with tabs, including an editor for value priorities.
 
 ## Idea: settings redesign (filed for later)
 

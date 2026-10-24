@@ -14,6 +14,7 @@ ns.DEFAULTS = {
 
     -- Order of the window's sections, top first
     sectionOrder = {
+        "plan",   -- "Best for this character": ranked activities
         "weekly", -- "This week": weekly quests in your log
         "activities", -- this week's activities: bountiful delves, events, ritual sites
         "zones",  -- world quests, grouped by zone
@@ -49,6 +50,11 @@ ns.DEFAULTS = {
     showBountifulDelves = false, -- list each bountiful delve individually (the progress line is always shown)
     delveTier = 11,  -- delve tier that counts towards your weekly delve goal
     delveGoal = 4,   -- how many delves at that tier (or higher) you want each week
+
+    -- "Best for this character" ranking
+    rankingMode   = "weighted", -- "weighted" (priorities blend) or "strict" (first priority wins)
+    valuePriority = { "gold", "transmog" }, -- what you value, most important first
+    weightFalloff = 0.5,        -- weighted mode: each priority counts this much of the one above
     activitiesMinLevel = nil, -- show weekly activities from this level (nil = max level only)
     respectCaps      = true,  -- stop chasing currencies you've capped this week (or are full on)
     emptySlotUpgrades = true, -- gear for a slot with nothing equipped counts as an upgrade

@@ -44,6 +44,8 @@ A World of Warcraft: Midnight addon that tells each character which world quests
 | `Window.lua` | The main window |
 | `SettingsPanel.lua` | The settings panel beside the window |
 | `Alts.lua` | Per-character snapshots and the Alts panel |
+| `ActivityData.lua` | What Krazzie knows about each activity: minimum item level, gold estimate (editable) |
+| `Plan.lua` | "Best for this character": ranks activities for the character you're on |
 | `Activities.lua` | This week's activities: bountiful delves, events, ritual sites |
 | `Events.lua` | Event goals, read from All The Things |
 | `Broker.lua` | Titan Panel and minimap icon |
@@ -100,6 +102,7 @@ See [DESIGN.md](DESIGN.md) for the goals system (collectibles, weekly caps, farm
 
 ## Version history
 
+- **2.0.0** "Best for this character": activities ranked by your value priorities (weighted or strict, per character), with an item level filter ("Not yet"); activity profiles in ActivityData.lua; learned gold stored per activity profile
 - **1.9.5** Completed activities hidden by default (Settings: Show completed activities); completed lines get a green tick
 - **1.9.4** Activity links can match quest names ("Fortify the Runestones" covers every faction's version); turn-in records note which character handed in
 - **1.9.3** Fix: Blizzard removed the old `GetCoinTextureString`; gold now shown via `ns.Coin` (uses `C_CurrencyInfo.GetCoinTextureString`)

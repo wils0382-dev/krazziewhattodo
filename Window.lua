@@ -318,6 +318,16 @@ function Window:Render(result, keepScroll)
         end
     end
 
+    -- SECTION: best for this character (ranked activities)
+    local function DrawPlan()
+        local plan = ns.Plan:Build(result, settings)
+        if #plan.ranked == 0 and #plan.notYet == 0 then return end
+        if not Heading("plan", "Best for this character", "(" .. #plan.ranked .. ")") then return end
+        Add(ns.Plan:Summary(plan), 16)
+        for i, c in ipairs(plan.ranked) do Add(ns.Plan:Line(i, c), 16) end
+        for _, c in ipairs(plan.notYet) do Add(ns.Plan:NotYetLine(c, plan.ilvl), 16) end
+    end
+
     -- SECTION: this week's activities (bountiful delves, events, ritual sites)
     local function DrawActivities()
         local acts = result.activities
@@ -331,7 +341,9 @@ function Window:Render(result, keepScroll)
         if not Heading("activities", "This week's activities", "(" .. open .. ")") then return end
         if delveText then Add(delveText, 16) end
         for _, a in ipairs(acts.list) do
-            if a.choice ~= "no" or showAll then
+            -- Completed ones are hidden unless you've asked to see them
+            local hiddenDone = a.done and not (showAll or settings.showDoneActivities)
+            if (a.choice ~= "no" or showAll) and not hiddenDone then
                 questCount = questCount + 1
                 local b = GetButtons(questCount)
                 local key = a.key
@@ -409,9 +421,12 @@ function Window:Render(result, keepScroll)
     end
 
     -- Draw the sections in your chosen order
-    local DRAW = { weekly = DrawWeekly, activities = DrawActivities, zones = DrawZones, events = DrawEvents }
-    for _, section in ipairs(settings.sectionOrder or { "weekly", "activities", "zones", "events" }) do
-        if DRAW[section] then DRAW[section]() end
+    local DRAW = { plan = DrawPlan, weekly = DrawWeekly, activities = DrawActivities, zones = DrawZones, events = DrawEvents }
+    for _, section in ipairs(settings.sectionOrder or { "plan", "weekly", "activities", "zones", "events" }) do
+        if DRAW[section] then
+            local ok, err = pcall(DRAW[section]) -- one broken section can't blank the window
+            if not ok then ns.ReportError(section .. " section", err) end
+        end
     end
 
     if not shownSomething then

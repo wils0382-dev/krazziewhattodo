@@ -6,9 +6,9 @@ local Panel = {}
 ns.SettingsPanel = Panel
 
 local WIDTH, PAD, ROW = 300, 12, 22
-local SECTION_ROWS = 4     -- weekly, activities, zones, events
+local SECTION_ROWS = 5     -- plan, weekly, activities, zones, events
 local PRIORITY_TOP = 192 + 20 + SECTION_ROWS * 22 + 12 -- priority list starts below the section order
-local LOWER_HEIGHT = 492   -- height of the "On login" + "Window" sections
+local LOWER_HEIGHT = 546   -- height of the "On login" + "Window" sections
 
 local LABELS = {
     pick    = "Your picks (ticked quests)",
@@ -25,12 +25,13 @@ local ownBox, scopeText, goldBox, ilvlBox, loginBox, chatBox, escBox, focusBox, 
 local rows = {}
 local sectionRows = {}
 local SECTION_LABELS = {
+    plan   = "Best for this character",
     weekly = "This week (weekly quests)",
     activities = "This week's activities",
     zones  = "World quests by zone",
     events = "Running events",
 }
-local eventsBox, emptySlotBox, repeatBox, activitiesBox, doneBox
+local eventsBox, emptySlotBox, repeatBox, activitiesBox, doneBox, strictBox
 local typeBoxes = {}
 
 -- Friendly name for a category, including learned currencies
@@ -279,6 +280,13 @@ local function Create(parent)
         end)
     end
 
+    -- Ranking mode for "Best for this character"
+    Label(lower, "Ranking", 0, -498, "GameFontNormal")
+    strictBox = TickBox(lower, "Strict order (first priority always wins)", -4, -518, function(on)
+        ns.SetSetting("rankingMode", on and "strict" or "weighted")
+        Changed()
+    end)
+
     -- Reset
     local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     reset:SetSize(130, 22)
@@ -350,6 +358,7 @@ function Panel:Update()
     repeatBox:SetChecked(s.showRepeatables)
     activitiesBox:SetChecked(s.showActivities)
     doneBox:SetChecked(s.showDoneActivities)
+    strictBox:SetChecked(s.rankingMode == "strict")
     emptySlotBox:SetChecked(s.emptySlotUpgrades)
     eventsBox:SetChecked(s.showEvents)
     for typeName, box in pairs(typeBoxes) do
